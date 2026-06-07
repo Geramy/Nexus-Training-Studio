@@ -1,0 +1,7 @@
+# Apple-Silicon LoRA fine-tuning stack.
+mlx>=0.18
+mlx-lm>=0.20
+huggingface_hub>=0.25
+pyyaml>=6
+# transformers is used by mlx-lm for the tokenizer/chat-template + by inspect_model.
+transformers>=4.45

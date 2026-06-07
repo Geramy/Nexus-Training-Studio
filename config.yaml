@@ -1,0 +1,15 @@
+# Nexus Training Studio — config (read by the Flutter app + the py/ pipeline).
+
+# Base model to fine-tune (HF repo id OR a local safetensors dir from the scan).
+base_model: "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
+
+# Tooling
+python: "python3"                       # interpreter (use the .venv one)
+llama_cpp_dir: "/Users/geramyloveless/Documents/Development/llama.cpp"
+quant: "Q4_K_M"                         # GGUF quantization for the export
+
+# HTTPS API
+port: 8443
+
+# Extra model directories to scan (LM Studio / HF / lemonade are auto-added).
+extra_model_dirs: []

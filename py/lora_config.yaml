@@ -1,0 +1,35 @@
+# mlx_lm.lora config — SAFE defaults for a tool-calling MoE.
+# Run with:  python -m mlx_lm lora --config py/lora_config.yaml
+# (the Flutter app fills {base_model} from config.yaml before running.)
+
+model: "{base_model}"
+train: true
+data: "workspace/data"          # expects train.jsonl + valid.jsonl (messages format)
+adapter_path: "workspace/adapters"
+
+# Conservative schedule — small data fine-tunes overfit fast.
+iters: 600                      # ~1-2 epochs depending on dataset size; tune down for tiny sets
+batch_size: 1
+max_seq_length: 4096
+learning_rate: 1.5e-4
+steps_per_report: 10
+steps_per_eval: 100
+save_every: 100
+grad_checkpoint: true           # fit more on unified memory
+# QLoRA: load the base 4-bit so a 30B MoE fits on a Mac. Comment out for bf16 LoRA.
+# (mlx-lm: pass --fine-tune-type lora and a quantized base, or pre-quantize with mlx_lm.convert -q)
+
+# Apply LoRA to the LAST N transformer blocks only.
+num_layers: 8
+
+lora_parameters:
+  rank: 16
+  scale: 32
+  dropout: 0.05
+  # ATTENTION-ONLY — leave the MoE router/experts untouched.
+  # VERIFY these names against the model: `python py/inspect_model.py`.
+  keys:
+    - "self_attn.q_proj"
+    - "self_attn.k_proj"
+    - "self_attn.v_proj"
+    - "self_attn.o_proj"
