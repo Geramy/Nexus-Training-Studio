@@ -26,10 +26,12 @@ lora_parameters:
   rank: 16
   scale: 32
   dropout: 0.05
-  # ATTENTION-ONLY — leave the MoE router/experts untouched.
-  # VERIFY these names against the model: `python py/inspect_model.py`.
+  # ATTENTION-ONLY — leave the MoE shared_experts + Mamba mixing (in_proj/out_proj)
+  # untouched. Nemotron-3-Nano is a hybrid Mamba/attention MoE whose attention
+  # projections live under `mixer.*` (verified via py/inspect_model.py). For a
+  # plain-attention model use self_attn.* instead.
   keys:
-    - "self_attn.q_proj"
-    - "self_attn.k_proj"
-    - "self_attn.v_proj"
-    - "self_attn.o_proj"
+    - "mixer.q_proj"
+    - "mixer.k_proj"
+    - "mixer.v_proj"
+    - "mixer.o_proj"

@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
-/// Runs the Python/MLX pipeline steps as subprocesses, streaming their output to
-/// [onLog]. Flutter is only the control plane — MLX does the work.
+/// Runs the Python/MLX pipeline + Hugging Face model management as subprocesses,
+/// streaming output to [onLog]. Flutter is only the control plane — MLX (native
+/// C++/Metal under the hood) does the training. The app manages the Python venv
+/// so the user never touches a terminal.
 class Pipeline {
   final String studioRoot;
-  final String python; // interpreter (use the .venv one)
+  final String configPython; // fallback interpreter if no venv yet
   final String baseModel;
   final String llamaCppDir;
   final String quant;
@@ -16,12 +18,40 @@ class Pipeline {
 
   Pipeline({
     required this.studioRoot,
-    required this.python,
+    required this.configPython,
     required this.baseModel,
     required this.llamaCppDir,
     required this.quant,
     required this.onLog,
   });
+
+  String get _venvBin => '$studioRoot/.venv/bin';
+  bool get envReady => File('$_venvBin/python').existsSync();
+  String get _python => envReady ? '$_venvBin/python' : configPython;
+  String get _tokenPath => '$studioRoot/workspace/hf_token.txt';
+
+  String? get hfToken {
+    final f = File(_tokenPath);
+    if (!f.existsSync()) return null;
+    final t = f.readAsStringSync().trim();
+    return t.isEmpty ? null : t;
+  }
+
+  void saveToken(String token) {
+    final f = File(_tokenPath)..parent.createSync(recursive: true);
+    f.writeAsStringSync(token.trim());
+    onLog(token.trim().isEmpty ? 'HF token cleared.' : 'HF token saved.');
+  }
+
+  Map<String, String> get _env {
+    final t = hfToken;
+    return {
+      ...Platform.environment,
+      'PATH': '$_venvBin:${Platform.environment['PATH'] ?? ''}',
+      if (t != null) 'HF_TOKEN': t,
+      if (t != null) 'HUGGING_FACE_HUB_TOKEN': t,
+    };
+  }
 
   Future<int> _run(String exe, List<String> args, String label) async {
     if (running) {
@@ -31,12 +61,16 @@ class Pipeline {
     onLog('\n▶ $label\n  \$ $exe ${args.join(' ')}');
     try {
       final p = await Process.start(exe, args,
-          workingDirectory: studioRoot, runInShell: false);
+          workingDirectory: studioRoot, environment: _env, runInShell: false);
       _current = p;
-      p.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen(
-          onLog);
-      p.stderr.transform(utf8.decoder).transform(const LineSplitter()).listen(
-          onLog);
+      p.stdout
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen(onLog);
+      p.stderr
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen(onLog);
       final code = await p.exitCode;
       _current = null;
       onLog(code == 0 ? '✓ $label done' : '✗ $label exited with $code');
@@ -54,17 +88,36 @@ class Pipeline {
     onLog('■ cancelled');
   }
 
-  Future<int> checkSupport() =>
-      _run(python, ['py/inspect_model.py', baseModel], 'Check support (inspect model)');
+  // ── Environment ────────────────────────────────────────────────────────
+  Future<int> setupEnv() => _run(
+        'bash',
+        ['-lc',
+            '$configPython -m venv .venv && .venv/bin/pip install -U pip -q && '
+            '.venv/bin/pip install -q -r py/requirements.txt && echo ENV_READY'],
+        'Setup Python env (venv + mlx-lm)',
+      );
+
+  // ── Hugging Face ───────────────────────────────────────────────────────
+  Future<int> downloadModel(String repo) =>
+      _run(_python, ['py/hf_download.py', repo], 'Download $repo');
+
+  Future<int> uploadModel(String localPath, String destRepo, bool private) =>
+      _run(_python, [
+        'py/hf_upload.py', localPath, destRepo, if (private) '--private',
+      ], 'Upload → $destRepo');
+
+  // ── Training pipeline ──────────────────────────────────────────────────
+  Future<int> checkSupport() => _run(
+      _python, ['py/inspect_model.py', baseModel], 'Check support (inspect model)');
 
   Future<int> prepareData() =>
-      _run(python, ['py/prepare_data.py'], 'Prepare data');
+      _run(_python, ['py/prepare_data.py'], 'Prepare data');
 
-  Future<int> train() =>
-      _run('bash', ['py/train.sh', baseModel, 'py/lora_config.yaml'], 'Train (LoRA)');
+  Future<int> train() => _run(
+      'bash', ['py/train.sh', baseModel, 'py/lora_config.yaml'], 'Train (LoRA)');
 
   Future<int> evaluate() =>
-      _run(python, ['py/eval.py', '--model', 'workspace/fused'], 'Eval (fused)');
+      _run(_python, ['py/eval.py', '--model', 'workspace/fused'], 'Eval (fused)');
 
   Future<int> exportGguf() => _run(
       'bash', ['py/export_gguf.sh', baseModel, llamaCppDir, quant], 'Export GGUF');

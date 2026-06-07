@@ -1,5 +1,25 @@
 import 'dart:io';
 
+/// Delete a scanned model from disk. For an HF-cache model it removes the whole
+/// `models--org--name` dir (blobs + snapshots); for a GGUF it removes the file;
+/// otherwise the model directory.
+Future<void> deleteModel(ModelInfo m) async {
+  final p = m.path;
+  final snap = p.indexOf('/snapshots/');
+  if (p.contains('/hub/models--') && snap >= 0) {
+    final root = Directory(p.substring(0, snap));
+    if (root.existsSync()) await root.delete(recursive: true);
+    return;
+  }
+  if (m.format == 'gguf') {
+    final f = File(p);
+    if (f.existsSync()) await f.delete();
+    return;
+  }
+  final d = Directory(p);
+  if (d.existsSync()) await d.delete(recursive: true);
+}
+
 /// A model found on disk by [ModelScanner].
 class ModelInfo {
   final String name;
@@ -53,7 +73,9 @@ class ModelScanner {
     if (depth > 4) return;
     List<FileSystemEntity> entries;
     try {
-      entries = dir.listSync(followLinks: false);
+      // followLinks: true — HF cache stores snapshot files (config.json, *.gguf)
+      // as SYMLINKS into blobs/, so we must resolve them to be seen as files.
+      entries = dir.listSync(followLinks: true);
     } catch (_) {
       return;
     }
@@ -76,12 +98,11 @@ class ModelScanner {
   }
 
   String _pretty(String path) {
-    final seg = path.split('/').last;
-    // HF cache: "models--nvidia--NVIDIA-Nemotron-..." → "nvidia/NVIDIA-..."
-    if (seg.startsWith('models--')) {
-      return seg.substring('models--'.length).replaceAll('--', '/');
-    }
-    return seg;
+    // HF cache: the config.json lives in .../models--org--name/snapshots/<hash>,
+    // so derive the name from the models--org--name ANCESTOR (not the hash dir).
+    final m = RegExp(r'models--([^/]+)').firstMatch(path);
+    if (m != null) return m.group(1)!.replaceAll('--', '/');
+    return path.split('/').last;
   }
 
   double _fileGb(File f) {
