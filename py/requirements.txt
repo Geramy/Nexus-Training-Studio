@@ -5,3 +5,7 @@ huggingface_hub>=0.25
 pyyaml>=6
 # transformers is used by mlx-lm for the tokenizer/chat-template + by inspect_model.
 transformers>=4.45
+# Data management: Excel/CSV import + Hugging Face datasets import.
+pandas>=2.0
+openpyxl>=3.1
+datasets>=2.18

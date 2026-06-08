@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 /// Runs the Python/MLX pipeline + Hugging Face model management as subprocesses,
 /// streaming output to [onLog]. Flutter is only the control plane — MLX (native
@@ -10,7 +11,8 @@ class Pipeline {
   final String configPython; // fallback interpreter if no venv yet
   final String baseModel;
   final String llamaCppDir;
-  final String quant;
+  final int trainBits; // QLoRA base precision (8)
+  final String exportQuants; // CSV, e.g. "Q8_0,Q6_K,Q4_K_M"
   final void Function(String line) onLog;
 
   Process? _current;
@@ -21,7 +23,8 @@ class Pipeline {
     required this.configPython,
     required this.baseModel,
     required this.llamaCppDir,
-    required this.quant,
+    required this.trainBits,
+    required this.exportQuants,
     required this.onLog,
   });
 
@@ -29,6 +32,11 @@ class Pipeline {
   bool get envReady => File('$_venvBin/python').existsSync();
   String get _python => envReady ? '$_venvBin/python' : configPython;
   String get _tokenPath => '$studioRoot/workspace/hf_token.txt';
+
+  /// The 8-bit MLX base built by [quantizeBase]; training/fuse use it when present.
+  String get base8bitPath => '$studioRoot/workspace/base-8bit';
+  bool get base8bitReady => File('$base8bitPath/config.json').existsSync();
+  String get trainBase => base8bitReady ? base8bitPath : baseModel;
 
   String? get hfToken {
     final f = File(_tokenPath);
@@ -38,8 +46,9 @@ class Pipeline {
   }
 
   void saveToken(String token) {
-    final f = File(_tokenPath)..parent.createSync(recursive: true);
-    f.writeAsStringSync(token.trim());
+    File(_tokenPath)
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync(token.trim());
     onLog(token.trim().isEmpty ? 'HF token cleared.' : 'HF token saved.');
   }
 
@@ -91,9 +100,11 @@ class Pipeline {
   // ── Environment ────────────────────────────────────────────────────────
   Future<int> setupEnv() => _run(
         'bash',
-        ['-lc',
-            '$configPython -m venv .venv && .venv/bin/pip install -U pip -q && '
-            '.venv/bin/pip install -q -r py/requirements.txt && echo ENV_READY'],
+        [
+          '-lc',
+          '$configPython -m venv .venv && .venv/bin/pip install -U pip -q && '
+              '.venv/bin/pip install -q -r py/requirements.txt && echo ENV_READY',
+        ],
         'Setup Python env (venv + mlx-lm)',
       );
 
@@ -106,6 +117,54 @@ class Pipeline {
         'py/hf_upload.py', localPath, destRepo, if (private) '--private',
       ], 'Upload → $destRepo');
 
+  /// Search HF for model repos by free text (for the download-field autocomplete).
+  Future<List<String>> searchModels(String query) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final r = await Process.run(_python, ['py/hf_search.py', query, '25'],
+          workingDirectory: studioRoot, environment: _env, runInShell: false);
+      final out = '${r.stdout}'.trim();
+      if (out.isEmpty) return [];
+      final d = jsonDecode(out);
+      if (d is List) return [for (final e in d) e.toString()];
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Search HF for DATASET repos by free text (for the dataset-import autocomplete).
+  Future<List<String>> searchDatasets(String query) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final r = await Process.run(
+          _python, ['py/hf_search.py', query, '25', '--datasets'],
+          workingDirectory: studioRoot, environment: _env, runInShell: false);
+      final out = '${r.stdout}'.trim();
+      if (out.isEmpty) return [];
+      final d = jsonDecode(out);
+      if (d is List) return [for (final e in d) e.toString()];
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// List the HF repos/namespaces the saved token can write to (for the picker).
+  /// Captures JSON instead of streaming to the log. Returns {} on any failure.
+  Future<Map<String, dynamic>> listRepos() async {
+    try {
+      final r = await Process.run(_python, ['py/hf_repos.py'],
+          workingDirectory: studioRoot, environment: _env, runInShell: false);
+      final out = '${r.stdout}'.trim();
+      if (out.isEmpty) return {'error': '${r.stderr}'.trim()};
+      final d = jsonDecode(out);
+      return d is Map<String, dynamic> ? d : {};
+    } catch (e) {
+      return {'error': '$e'};
+    }
+  }
+
   // ── Training pipeline ──────────────────────────────────────────────────
   Future<int> checkSupport() => _run(
       _python, ['py/inspect_model.py', baseModel], 'Check support (inspect model)');
@@ -113,12 +172,261 @@ class Pipeline {
   Future<int> prepareData() =>
       _run(_python, ['py/prepare_data.py'], 'Prepare data');
 
-  Future<int> train() => _run(
-      'bash', ['py/train.sh', baseModel, 'py/lora_config.yaml'], 'Train (LoRA)');
+  /// Make the 8-bit MLX base (from [baseModel]) that QLoRA trains on.
+  Future<int> quantizeBase() => _run(
+        _python,
+        ['-m', 'mlx_lm', 'convert', '--hf-path', baseModel, '-q', '--q-bits',
+            '$trainBits', '--mlx-path', base8bitPath],
+        'Quantize base → ${trainBits}-bit MLX',
+      );
+
+  /// LoRA train. [model] overrides the base; [iters] overrides config;
+  /// [defaultKeys] runs a quick smoke with mlx-lm's auto LoRA targets (no config),
+  /// e.g. to validate the toolchain on a small model.
+  Future<int> train({String? model, int? iters, bool defaultKeys = false}) {
+    final m = model ?? trainBase;
+    if (defaultKeys) {
+      return _run(_python, [
+        '-m', 'mlx_lm', 'lora', '--model', m, '--train',
+        '--data', 'workspace/data', '--adapter-path', 'workspace/adapters',
+        '--iters', '${iters ?? 2}', '--num-layers', '2', '--batch-size', '1',
+      ], 'Train (smoke, auto keys) on $m');
+    }
+    return _run('bash', [
+      'py/train.sh', m, 'py/lora_config.yaml', if (iters != null) '$iters',
+    ], 'Train (LoRA, ${trainBits}-bit base)');
+  }
 
   Future<int> evaluate() =>
       _run(_python, ['py/eval.py', '--model', 'workspace/fused'], 'Eval (fused)');
 
-  Future<int> exportGguf() => _run(
-      'bash', ['py/export_gguf.sh', baseModel, llamaCppDir, quant], 'Export GGUF');
+  /// BFCL-style tool-call eval: replay held-out convs, score name/args match.
+  Future<int> evalToolCalls({String? model, int limit = 100}) => _run(
+        _python,
+        ['py/eval_toolcalls.py', '--model', model ?? 'workspace/fused',
+            '--limit', '$limit'],
+        'Tool-call eval (${model ?? "workspace/fused"})',
+      );
+
+  /// Run the fine-tuned model against the use/test cases in workspace/tests and
+  /// report pass/fail per case. [model] defaults to the fused fine-tune.
+  Future<int> runTests({String? model}) => _run(
+        _python,
+        ['py/run_tests.py', '--model', model ?? 'workspace/fused'],
+        'Test cases on ${model ?? "workspace/fused"}',
+      );
+
+  /// Fuse adapter (de-quantized) → GGUF → quantize to each of [exportQuants].
+  Future<int> exportGguf() => _run('bash',
+      ['py/export_gguf.sh', trainBase, llamaCppDir, exportQuants], 'Export GGUF');
+
+  // ── Data management ──────────────────────────────────────────────────────
+  /// Synthesize the setup/discovery/task corpus (full+partial+recovery variants).
+  Future<int> generateData({String kinds = 'setup,discovery,tasks'}) => _run(
+      _python, ['py/gen_training_data.py', '--kinds', kinds],
+      'Generate training data ($kinds)');
+
+  /// Import an Excel/CSV file of conversations into the dataset.
+  Future<int> importExcel(String path) =>
+      _run(_python, ['py/import_excel.py', path], 'Import Excel: $path');
+
+  /// Write a fill-in Excel template matching our structure.
+  Future<int> exportTemplate(String path) => _run(
+      _python, ['py/import_excel.py', '--template', path], 'Write template: $path');
+
+  /// Import a Hugging Face dataset, auto-mapping common schemas.
+  Future<int> importHf(String dataset,
+          {String split = 'train', String? config, int? limit}) =>
+      _run(_python, [
+        'py/import_hf_dataset.py', dataset, '--split', split,
+        if (config != null && config.isNotEmpty) ...['--config', config],
+        if (limit != null && limit > 0) ...['--limit', '$limit'],
+      ], 'Import HF dataset: $dataset');
+
+  // ── Canonical dataset (dataset.jsonl) CRUD — the UI table edits this ───────
+  String get datasetPath => '$studioRoot/workspace/data/dataset.jsonl';
+
+  List<Map<String, dynamic>> datasetRows() {
+    final f = File(datasetPath);
+    if (!f.existsSync()) return [];
+    final out = <Map<String, dynamic>>[];
+    for (final line in f.readAsLinesSync()) {
+      if (line.trim().isEmpty) continue;
+      try {
+        final d = jsonDecode(line);
+        if (d is Map<String, dynamic>) out.add(d);
+      } catch (_) {}
+    }
+    return out;
+  }
+
+  /// Memory-bounded count of rows — scans the file for newline bytes in chunks
+  /// (the corpus can be multi-GB; never load it all). Caches the result in a
+  /// sidecar so repeat loads are instant; the cache auto-invalidates when the
+  /// dataset file is newer than the sidecar.
+  int datasetCount() {
+    final f = File(datasetPath);
+    if (!f.existsSync()) return 0;
+    final cache = File('$datasetPath.count');
+    if (cache.existsSync() &&
+        cache.lastModifiedSync().isAfter(f.lastModifiedSync())) {
+      final v = int.tryParse(cache.readAsStringSync().trim());
+      if (v != null) return v;
+    }
+    final n = _scanCount(f);
+    try {
+      cache.writeAsStringSync('$n');
+    } catch (_) {}
+    return n;
+  }
+
+  int _scanCount(File f) {
+    final raf = f.openSync();
+    try {
+      var count = 0;
+      const chunk = 1 << 20; // 1 MB
+      var trailing = false; // last byte seen was non-newline
+      while (true) {
+        final bytes = raf.readSync(chunk);
+        if (bytes.isEmpty) break;
+        for (final b in bytes) {
+          if (b == 10) {
+            count++;
+            trailing = false;
+          } else {
+            trailing = true;
+          }
+        }
+      }
+      return count + (trailing ? 1 : 0); // count a final unterminated line
+    } finally {
+      raf.closeSync();
+    }
+  }
+
+  /// Compact per-row summaries for the table view — reads ONLY the prefix bytes
+  /// up to (offset+limit) lines, so a multi-GB corpus never loads fully.
+  List<Map<String, dynamic>> datasetSummary({int limit = 500, int offset = 0}) {
+    final out = <Map<String, dynamic>>[];
+    final f = File(datasetPath);
+    if (!f.existsSync()) return out;
+    final raf = f.openSync();
+    try {
+      final need = offset + limit;
+      final buf = BytesBuilder(copy: false);
+      var lines = 0;
+      const chunk = 1 << 20;
+      outer:
+      while (lines < need) {
+        final bytes = raf.readSync(chunk);
+        if (bytes.isEmpty) break;
+        buf.add(bytes);
+        for (final b in bytes) {
+          if (b == 10) {
+            lines++;
+            if (lines >= need) break outer;
+          }
+        }
+      }
+      final text = utf8.decode(buf.takeBytes(), allowMalformed: true);
+      var i = -1;
+      for (final line in const LineSplitter().convert(text)) {
+        if (line.trim().isEmpty) continue;
+        i++;
+        if (i < offset) continue;
+        if (out.length >= limit) break;
+        try {
+          final d = jsonDecode(line);
+          if (d is Map<String, dynamic>) out.add(_summarize(d));
+        } catch (_) {}
+      }
+    } finally {
+      raf.closeSync();
+    }
+    return out;
+  }
+
+  Map<String, dynamic> _summarize(Map<String, dynamic> r) {
+    final msgs = (r['messages'] as List?) ?? const [];
+    var sys = '', firstUser = '';
+    final calls = <String>{};
+    for (final m in msgs) {
+      if (m is! Map) continue;
+      if (m['role'] == 'system' && sys.isEmpty) sys = '${m['content'] ?? ''}';
+      if (m['role'] == 'user' && firstUser.isEmpty) {
+        firstUser = '${m['content'] ?? ''}';
+      }
+      if (m['tool_calls'] is List) {
+        for (final t in (m['tool_calls'] as List)) {
+          if (t is Map && t['function'] is Map) {
+            calls.add('${(t['function'] as Map)['name']}');
+          }
+        }
+      }
+    }
+    var kind = 'other';
+    if (sys.contains('Setup host')) {
+      kind = 'setup';
+    } else if (sys.contains('DISCOVERY')) {
+      kind = 'discovery';
+    } else if (sys.contains('Project Manager')) {
+      kind = 'tasks';
+    }
+    return {
+      'id': r['id'] ?? '',
+      'source': r['source'] ?? '',
+      'kind': kind,
+      'turns': msgs.length,
+      'tools': (r['tools'] as List?)?.length ?? 0,
+      'calls': calls.toList(),
+      'preview':
+          firstUser.length > 140 ? '${firstUser.substring(0, 140)}…' : firstUser,
+    };
+  }
+
+  /// FNV-1a 64-bit hex of the messages — stable id + dedupe for manual adds.
+  String _hashMessages(Object messages) {
+    final bytes = utf8.encode(jsonEncode(messages));
+    var h = 0xcbf29ce484222325;
+    const mask = 0xFFFFFFFFFFFFFFFF;
+    for (final b in bytes) {
+      h = (h ^ b) & mask;
+      h = (h * 0x100000001b3) & mask;
+    }
+    return h.toRadixString(16).padLeft(16, '0');
+  }
+
+  /// Add a conversation row; returns false if invalid or a duplicate.
+  bool addConversation(List<dynamic> messages,
+      {String source = 'manual', List<dynamic>? tools}) {
+    if (messages.isEmpty) return false;
+    if (!messages.any((m) => m is Map && m['role'] == 'assistant')) return false;
+    final id = _hashMessages(messages);
+    final rows = datasetRows();
+    if (rows.any((r) => r['id'] == id)) return false;
+    rows.add({
+      'id': id,
+      'source': source,
+      'messages': messages,
+      if (tools != null && tools.isNotEmpty) 'tools': tools,
+    });
+    _writeDataset(rows);
+    return true;
+  }
+
+  bool deleteConversation(String id) {
+    final rows = datasetRows();
+    final before = rows.length;
+    rows.removeWhere((r) => r['id'] == id);
+    if (rows.length == before) return false;
+    _writeDataset(rows);
+    return true;
+  }
+
+  void _writeDataset(List<Map<String, dynamic>> rows) {
+    final f = File(datasetPath)..parent.createSync(recursive: true);
+    f.writeAsStringSync(rows.isEmpty
+        ? ''
+        : '${rows.map(jsonEncode).join('\n')}\n');
+  }
 }

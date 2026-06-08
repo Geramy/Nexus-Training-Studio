@@ -6,7 +6,11 @@ base_model: "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
 # Tooling
 python: "python3"                       # interpreter (use the .venv one)
 llama_cpp_dir: "/Users/geramyloveless/Documents/Development/llama.cpp"
-quant: "Q4_K_M"                         # GGUF quantization for the export
+
+# Train QLoRA on an 8-bit MLX base (Quantize-base step makes it from base_model),
+# then export GGUF at these quants (8-bit + the 6/4 you want).
+train_bits: 8
+export_quants: "Q8_0,Q6_K,Q4_K_M"
 
 # HTTPS API
 port: 8443

@@ -14,8 +14,22 @@ build/
 
 # Python
 .venv/
+.venv-convert/
 **/__pycache__/
 *.pyc
 
 # Studio working data + training artifacts (machine-local, can be large)
 workspace/
+
+# Generated Flutter/macOS glue + editor / OS cruft
+/macos/Flutter/GeneratedPluginRegistrant.*
+/macos/Flutter/Flutter-Generated.xcconfig
+**/xcuserdata/
+**/DerivedData/
+*.iml
+.idea/
+.DS_Store
+*.log
+
+# Raw screenshot dump (curated copies live in docs/images/)
+screenshots/

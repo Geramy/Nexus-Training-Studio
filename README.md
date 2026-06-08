@@ -1,79 +1,55 @@
 # Nexus Training Studio
 
-A small **Flutter macOS app** that fine-tunes a model for the Nexus agents on
-Apple Silicon (M-series), then exports a **GGUF** you can load in lemonade / the
-router. Sibling to `nexus_projects_client`.
+A macOS app to **fine-tune a tool-calling model for the Nexus agents and export it as GGUF** —
+LoRA training on Apple Silicon (MLX), all from a guided UI. It also runs a local HTTPS API so
+the agents (or you) can feed training data and drive the whole pipeline.
 
-It is the **control plane**: a one-screen UI + an **HTTPS API** the Nexus agents
-call to push training examples, plus a **model scanner** (LM Studio, Hugging Face
-cache, lemonade). The actual training is a **Python + MLX** pipeline it runs for
-you (Flutter/Dart can't run MLX directly).
+![Overview](docs/images/overview.png)
 
-```
-Nexus agents ──HTTPS POST /training-data──▶  Training Studio (Flutter)
-                                               │  scans models · shows logs
-                                               ▼  shells out to →  py/ (MLX)
-   data → mlx_lm.lora (LoRA, attention-only, completion-masked)
-        → mlx_lm.fuse (merge adapter)
-        → llama.cpp convert_hf_to_gguf → llama-quantize  →  *.gguf
-```
+## What it does
 
-## Why this design avoids "it messed up the model"
-Baked into `py/lora_config.yaml` + `py/prepare_data.py`:
-- **LoRA on the instruct checkpoint**, never full fine-tune.
-- **Attention-only** LoRA targets — the MoE router/experts are left alone (the
-  classic way an MoE gets wrecked). *Verify the key names match this arch — see
-  "Architecture risk" below.*
-- **Completion-only loss** + the model's **exact chat template** (mlx-lm applies
-  both for a `messages` dataset, so train==serve format).
-- Conservative **rank 16 / scale 32 / lr 1.5e-4 / 1–2 epochs** + a behavioral
-  **eval gate** (`py/eval.py`) before you export.
+Walk left-to-right through the steps; each runs locally and streams to the live-log dock:
 
-## ⚠️ Architecture risk (read before a long run)
-Base model: **nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16** — a hybrid
-Mamba/Transformer **MoE**. Two things to confirm on YOUR machine first (the UI's
-**“Check support”** button does both, fast):
-1. `mlx-lm` can load + LoRA this architecture. If not, training can't run on MLX
-   yet — fall back to a CUDA box (PEFT/QLoRA) and use this studio only for data +
-   GGUF export.
-2. Your `llama.cpp` `convert_hf_to_gguf.py` supports this arch (you already run it
-   as GGUF, so conversion likely works).
-Also confirm the LoRA `keys` in `lora_config.yaml` match this model's attention
-projection module names (run `py/inspect_model.py`).
+**Environment → Base Model → Data → Quantize → Train → Evaluate → Test → Export GGUF → Upload**
 
-## Run it
+- **Generate / import data** — synthesize tens of thousands of tool-calling conversations
+  (setup interview, discovery, task generation), or import Excel/CSV and Hugging Face datasets.
+- **Train** — QLoRA on an 8-bit MLX base of a 30B hybrid-MoE model (attention + MLP targets).
+- **Export** — fuse the adapter → GGUF, imatrix-quantized to Q8/Q6/Q4 for llama.cpp / lemonade.
+- **Upload** — push models to Hugging Face (your account or an org), public or private.
+
+| Data table — generate / import / edit | Train (LoRA), live loss |
+|---|---|
+| ![Data](docs/images/data.png) | ![Train](docs/images/train.png) |
+
+## Quick start
+
+Requirements: **macOS on Apple Silicon**, [Flutter](https://docs.flutter.dev/get-started/install/macos),
+Python 3, and a built [llama.cpp](https://github.com/ggml-org/llama.cpp) (for GGUF export).
+
 ```bash
-cd training_studio
-flutter create .            # generate macOS platform scaffolding (one time)
-flutter pub get
-# Python side (one time):
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r py/requirements.txt
-# Edit config.yaml: set llama_cpp_dir + python path if needed.
-flutter run -d macos
-```
-The HTTPS API starts on `https://localhost:8443` (self-signed cert auto-generated
-in `workspace/certs/`). Point the Nexus agents' "training sink" at it.
-
-## API (for the agents to feed data)
-- `POST /training-data` — body `{"messages":[{role,content,tool_calls,...}, ...]}`
-  (one validated conversation). Appended to `workspace/data/raw.jsonl`.
-- `POST /training-data/batch` — body `{"items":[{messages:[...]}, ...]}`.
-- `GET  /models` — scanned models (path, format, sizeGB, source).
-- `GET  /status` — current pipeline stage + counts.
-- `GET  /health` — ok.
-
-## Workspace layout
-```
-workspace/
-  data/raw.jsonl          # everything the agents posted
-  data/train.jsonl        # prepared (messages format) — mlx-lm reads this dir
-  data/valid.jsonl
-  adapters/               # mlx_lm.lora output (LoRA adapter)
-  fused/                  # mlx_lm.fuse output (merged safetensors)
-  gguf/                   # converted + quantized GGUF (load this in lemonade)
-  certs/                  # self-signed TLS cert for the HTTPS API
+flutter run -d macos          # launch the app
 ```
 
-This is a v1 scaffold — run it on the Mac and iterate. It is NOT tested here (no
-MLX/Flutter in the build env); expect to tweak the arch-specific `keys` and paths.
+Then in the app, top-to-bottom:
+1. **Step 1 — Setup env** (creates a Python venv + installs mlx-lm).
+2. **Step 2 — Base Model** — paste a Hugging Face token, search + download a model.
+3. **Step 3 — Data** — *Generate corpus* (or import Excel/HF), then *Prepare data*.
+4. **Step 4–5** — *Quantize 8-bit*, then *Train (LoRA)*.
+5. **Step 8 — Export GGUF**, **Step 9 — Upload**.
+
+Edit `config.yaml` to set the base model, `llama.cpp` path, and export quants.
+
+## API
+
+The app serves `https://localhost:8443` (self-signed). Agents POST conversation traces to
+`/training-data`; the whole pipeline is drivable over HTTP — `POST /run/<step>`, `GET /data`,
+`GET /status`, `GET /logs` — so it can run headless while you watch the UI.
+
+![Models](docs/images/models.png)
+
+## Output
+
+GGUF quants ready for llama.cpp / lemonade. ⚠️ The base is a **reasoning model** — serve it with
+**thinking disabled** (`enable_thinking=false`) and parse the `<function=…>` tool-call format.
+See the exported model card for details.
