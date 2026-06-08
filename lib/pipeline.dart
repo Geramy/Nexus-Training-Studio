@@ -202,15 +202,17 @@ class Pipeline {
 
   /// BFCL-style tool-call eval. Defaults to the TRAINED model = 8-bit base +
   /// the LoRA adapter (no fuse needed). Writes workspace/eval_result.json.
-  Future<int> evalToolCalls({String? model, String? adapter, int limit = 120}) {
+  Future<int> evalToolCalls(
+      {String? model, String? adapter, int limit = 120, bool baseOnly = false}) {
     final m = model ?? (base8bitReady ? base8bitPath : baseModel);
     final a = adapter ?? '$studioRoot/workspace/adapters';
-    final hasAdapter = File('$a/adapters.safetensors').existsSync();
+    final useAdapter =
+        !baseOnly && File('$a/adapters.safetensors').existsSync();
     return _run(_python, [
       'py/eval_toolcalls.py', '--model', m,
-      if (hasAdapter) ...['--adapter', a],
+      if (useAdapter) ...['--adapter', a],
       '--limit', '$limit',
-    ], 'Tool-call eval${hasAdapter ? " (base + adapter)" : ""}');
+    ], 'Tool-call eval (${useAdapter ? "base + adapter" : "base only"})');
   }
 
   /// The last eval's percentages, for the UI panel (null if none yet).

@@ -1116,6 +1116,20 @@ class _StudioHomeState extends State<StudioHome> {
                         if (mounted) setState(() {});
                       }),
           ]),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _btn('Compare base vs trained', Icons.compare_arrows,
+                busy
+                    ? null
+                    : () async {
+                        await _step('eval-base',
+                            () => _pipeline.evalToolCalls(baseOnly: true));
+                        await _step('eval-tuned',
+                            () => _pipeline.evalToolCalls());
+                        if (mounted) setState(() {});
+                      }),
+          ),
           const SizedBox(height: 12),
           _evalPanel(),
           const SizedBox(height: 8),
@@ -1441,17 +1455,38 @@ class _StudioHomeState extends State<StudioHome> {
     );
   }
 
-  // ── Last tool-call eval, as percentages ──
+  // ── Tool-call eval: base vs trained, as percentages ──
   Widget _evalPanel() {
     final r = _pipeline.lastEvalResult();
     if (r == null) return const SizedBox.shrink();
-    Widget metric(String label, num pct, Color c) => Expanded(
-          child: Column(children: [
-            Text('${(pct).toStringAsFixed(1)}%',
-                style: TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.bold, color: c)),
-            Text(label,
-                style: const TextStyle(fontSize: 11, color: Colors.white70)),
+    final base = r['base'] as Map?;
+    // backward-compat: a flat (old) result is treated as the tuned column
+    final tuned =
+        (r['tuned'] as Map?) ?? (r.containsKey('function_name_pct') ? r : null);
+    if (base == null && tuned == null) return const SizedBox.shrink();
+    final any = tuned ?? base!;
+
+    Widget head(String s, Color c) => Expanded(
+        child: Text(s,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: c)));
+    Widget val(Map? m, String key, Color c) => Expanded(
+          child: Text(m == null ? '—' : '${(m[key] as num).toStringAsFixed(1)}%',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold,
+                  color: m == null ? Colors.white38 : c)),
+        );
+    Widget row(String label, String key) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(children: [
+            Expanded(
+                flex: 2,
+                child: Text(label,
+                    style: const TextStyle(
+                        fontSize: 13, color: Colors.white70))),
+            val(base, key, Colors.white),
+            val(tuned, key, Colors.greenAccent),
           ]),
         );
     return Card(
@@ -1459,20 +1494,22 @@ class _StudioHomeState extends State<StudioHome> {
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            const Text('Last tool-call eval',
+            const Text('Tool-call eval — base vs trained',
                 style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(width: 8),
-            Text('${r['total']} held-out calls · ${r['parsed']} parsed',
+            const Spacer(),
+            Text('${any['total']} held-out calls',
                 style: const TextStyle(fontSize: 11, color: Colors.white54)),
           ]),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(children: [
-            metric('function name', (r['function_name_pct'] as num),
-                Colors.greenAccent),
-            metric('arg keys', (r['arg_keys_pct'] as num), Colors.greenAccent),
-            metric('args exact', (r['args_exact_pct'] as num),
-                Colors.amberAccent),
+            const Expanded(flex: 2, child: SizedBox()),
+            head('Base', Colors.white54),
+            head('Trained', Colors.greenAccent),
           ]),
+          const Divider(height: 12),
+          row('function name', 'function_name_pct'),
+          row('arg keys', 'arg_keys_pct'),
+          row('args exact', 'args_exact_pct'),
         ]),
       ),
     );

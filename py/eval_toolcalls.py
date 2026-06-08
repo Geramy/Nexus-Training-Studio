@@ -162,7 +162,8 @@ def main():
     print(f"  arguments exact:      {args_ok}/{total}  ({pct(args_ok)})")
     print(f"  argument-keys match:  {key_ok}/{total}  ({pct(key_ok)})")
 
-    # Write a result the UI can read + chart.
+    # Write a result the UI can read — keyed base/tuned so both persist for a
+    # side-by-side comparison (base = no adapter, tuned = with adapter).
     result = {
         "total": total, "parsed": parsed,
         "function_name_pct": round(100 * name_ok / total, 1),
@@ -170,9 +171,17 @@ def main():
         "arg_keys_pct": round(100 * key_ok / total, 1),
         "model": args.model, "adapter": args.adapter,
     }
-    Path("workspace").mkdir(exist_ok=True)
-    Path("workspace/eval_result.json").write_text(json.dumps(result, indent=2))
-    print("· wrote workspace/eval_result.json")
+    out = Path("workspace/eval_result.json")
+    out.parent.mkdir(exist_ok=True)
+    data = {}
+    if out.exists():
+        try:
+            data = json.loads(out.read_text())
+        except Exception:  # noqa: BLE001
+            data = {}
+    data[("tuned" if args.adapter else "base")] = result
+    out.write_text(json.dumps(data, indent=2))
+    print(f"· wrote workspace/eval_result.json [{'tuned' if args.adapter else 'base'}]")
     return 0
 
 
