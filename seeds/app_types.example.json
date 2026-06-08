@@ -1,0 +1,138 @@
+{
+  "ordering": {
+    "blurb": "lets {d} customers order ahead and track their order",
+    "objectives": [
+      "Online ordering",
+      "Order tracking",
+      "Menu management",
+      "Loyalty rewards",
+      "Push notifications",
+      "Scheduled pickup",
+      "Payments",
+      "Reorder favorites"
+    ],
+    "features": [
+      "Menu browser",
+      "Cart & checkout",
+      "Order status",
+      "Rewards points",
+      "Saved payment methods",
+      "Pickup times"
+    ],
+    "roles": [
+      "customer",
+      "staff member",
+      "manager"
+    ],
+    "flow": [
+      "Open app",
+      "Browse menu",
+      "Add to cart",
+      "Choose pickup time",
+      "Pay",
+      "Track order",
+      "Get ready notification"
+    ],
+    "edges": [
+      [
+        "an item is sold out mid-order",
+        "Tell the user and suggest a similar item without losing the cart.",
+        "Handle sold-out item",
+        "As a customer, I want a substitute suggested if an item sells out, so that I still complete my order.",
+        "- Detect out-of-stock\n- Offer substitute\n- Preserve cart"
+      ],
+      [
+        "payment fails",
+        "Show a clear error and let them retry or switch payment method.",
+        "Recover from failed payment",
+        "As a customer, I want to retry a failed payment, so that I don't lose my order.",
+        "- Detect decline\n- Offer retry\n- Keep order draft"
+      ]
+    ],
+    "tasks": [
+      [
+        "Build menu browser screen",
+        "Write a {fw} menu screen listing items from GET /menu. Objective: {lang} menu UI. Acceptance: items render, tap adds to cart. Verify: {fw} test passes.",
+        "ui"
+      ],
+      [
+        "Create orders schema",
+        "Objective: Create tables in {db}. Add menu_items, orders, order_items with FKs. Acceptance: migration applies. Verify: schema lists 3 tables.",
+        "db"
+      ],
+      [
+        "Order status endpoint",
+        "Objective: Write {lang} order-status API. GET /orders/:id/status returns live state. Acceptance: returns queued|making|ready. Verify: curl returns 200 with status.",
+        "api"
+      ]
+    ]
+  },
+  "booking": {
+    "blurb": "lets people book appointments at a {d}",
+    "objectives": [
+      "Appointment booking",
+      "Calendar sync",
+      "Reminders",
+      "Staff scheduling",
+      "Online payments",
+      "Waitlist",
+      "Recurring bookings",
+      "Cancellations"
+    ],
+    "features": [
+      "Availability calendar",
+      "Booking form",
+      "Reminder emails",
+      "Staff roster",
+      "Deposit payments",
+      "Reschedule flow"
+    ],
+    "roles": [
+      "client",
+      "staff member",
+      "owner"
+    ],
+    "flow": [
+      "Pick a service",
+      "See availability",
+      "Choose a slot",
+      "Enter details",
+      "Pay deposit",
+      "Get confirmation",
+      "Receive reminder"
+    ],
+    "edges": [
+      [
+        "two clients book the same slot",
+        "Lock the slot on selection and warn if it's already taken.",
+        "Prevent double-booking",
+        "As a client, I want to be told if my slot was just taken, so that I can pick another.",
+        "- Lock slot on hold\n- Detect conflict\n- Offer next opening"
+      ],
+      [
+        "a client no-shows",
+        "Flag no-shows and optionally charge the deposit.",
+        "Handle no-shows",
+        "As an owner, I want no-shows flagged, so that I can enforce my policy.",
+        "- Mark no-show\n- Apply deposit rule\n- Notify client"
+      ]
+    ],
+    "tasks": [
+      [
+        "Build availability calendar",
+        "Write a {fw} calendar showing open slots from GET /availability. Objective: {lang} calendar UI. Acceptance: open slots selectable. Verify: {fw} test passes.",
+        "ui"
+      ],
+      [
+        "Create bookings schema",
+        "Objective: Create tables in {db}. Add services, slots, bookings with a unique constraint on (slot_id). Acceptance: double-book fails. Verify: constraint rejects duplicate.",
+        "db"
+      ],
+      [
+        "Booking confirmation service",
+        "Objective: Write {lang} booking API. POST /bookings holds a slot and emails confirmation. Acceptance: returns 201, slot locked. Verify: test passes.",
+        "api"
+      ]
+    ]
+  }
+}

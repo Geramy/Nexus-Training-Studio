@@ -1,0 +1,144 @@
+{
+  "industries": {
+    "Food & Beverage": {
+      "ideas": [
+        "sell lemonade at events",
+        "run a coffee cart",
+        "open a bakery",
+        "start a taco food truck",
+        "deliver homemade meals",
+        "run a juice and smoothie bar",
+        "a meal-prep subscription",
+        "a craft brewery taproom",
+        "a farmers-market produce stand",
+        "a pizza delivery joint",
+        "a bubble tea shop",
+        "cater weddings and events",
+        "a ghost kitchen for delivery",
+        "a coffee roastery with a subscription",
+        "a dessert pop-up"
+      ],
+      "platforms": [
+        [
+          "iOS",
+          "Android"
+        ],
+        [
+          "iOS",
+          "Android",
+          "Web"
+        ]
+      ],
+      "objectives": [
+        "Online ordering",
+        "Menu management",
+        "Delivery",
+        "Scheduled pickup",
+        "Loyalty rewards",
+        "Payments",
+        "Reservations"
+      ],
+      "apps": [
+        "ordering",
+        "marketplace",
+        "booking"
+      ]
+    },
+    "Health & Fitness": {
+      "ideas": [
+        "help people track workouts",
+        "a personal-training booking app",
+        "a running and cycling tracker",
+        "a yoga class scheduler",
+        "a nutrition and calorie log",
+        "a gym membership app",
+        "a meditation and sleep app",
+        "a physical-therapy exercise app",
+        "a step-and-activity challenge app",
+        "a habit and wellness tracker",
+        "a CrossFit box management app"
+      ],
+      "platforms": [
+        [
+          "iOS",
+          "Android"
+        ],
+        [
+          "iOS",
+          "Android",
+          "Web"
+        ]
+      ],
+      "objectives": [
+        "Workout logging",
+        "Training plans",
+        "Progress charts",
+        "Class booking",
+        "Reminders",
+        "Social challenges"
+      ],
+      "apps": [
+        "tracker",
+        "booking",
+        "social"
+      ]
+    },
+    "Retail": {
+      "ideas": [
+        "run a clothing boutique",
+        "a sneaker resale shop",
+        "a hardware store with inventory",
+        "a bookstore",
+        "a pet supply shop",
+        "a thrift store",
+        "a comic book store",
+        "a plant nursery",
+        "a toy store",
+        "a jewelry shop",
+        "track stock across two store locations"
+      ],
+      "platforms": [
+        [
+          "iOS",
+          "Android"
+        ],
+        [
+          "Web"
+        ],
+        [
+          "iOS",
+          "Android",
+          "Web"
+        ]
+      ],
+      "objectives": [
+        "Inventory",
+        "Point of sale",
+        "Barcode scanning",
+        "Low-stock alerts",
+        "Reorder",
+        "Reports",
+        "Loyalty"
+      ],
+      "apps": [
+        "inventory",
+        "marketplace",
+        "ordering"
+      ]
+    }
+  },
+  "verb_openers": [
+    "I want to {idea}.",
+    "Basically I {idea} and need an app for it.",
+    "I {idea}, and I want to turn that into an app."
+  ],
+  "noun_openers": [
+    "I want to build {idea}.",
+    "My idea is {idea}.",
+    "I'm thinking about {idea}."
+  ],
+  "infer_reflections": [
+    "Sounds like a {ind} product — tagging that to start.",
+    "Got it, that's {ind}. Let me record the basics."
+  ]
+}

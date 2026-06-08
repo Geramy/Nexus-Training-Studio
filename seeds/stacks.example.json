@@ -1,0 +1,138 @@
+[
+  {
+    "surfaces": [
+      "Android",
+      "iOS"
+    ],
+    "languages": [
+      "Dart"
+    ],
+    "frameworks": [
+      "Flutter"
+    ],
+    "databases": [
+      "PostgreSQL",
+      "SQLite"
+    ],
+    "services": [
+      "Firebase Auth",
+      "Stripe"
+    ]
+  },
+  {
+    "surfaces": [
+      "Web"
+    ],
+    "languages": [
+      "TypeScript"
+    ],
+    "frameworks": [
+      "React",
+      "Node.js"
+    ],
+    "databases": [
+      "PostgreSQL"
+    ],
+    "services": [
+      "Auth0",
+      "SendGrid"
+    ]
+  },
+  {
+    "surfaces": [
+      "Web"
+    ],
+    "languages": [
+      "TypeScript"
+    ],
+    "frameworks": [
+      "Next.js",
+      "NestJS"
+    ],
+    "databases": [
+      "PostgreSQL",
+      "Redis"
+    ],
+    "services": [
+      "Clerk",
+      "Stripe"
+    ]
+  },
+  {
+    "surfaces": [
+      "Cloud/Server"
+    ],
+    "languages": [
+      "Python"
+    ],
+    "frameworks": [
+      "FastAPI"
+    ],
+    "databases": [
+      "PostgreSQL"
+    ],
+    "services": [
+      "Sentry",
+      "S3"
+    ]
+  },
+  {
+    "surfaces": [
+      "Cloud/Server"
+    ],
+    "languages": [
+      "TypeScript"
+    ],
+    "frameworks": [
+      "Node.js"
+    ],
+    "databases": [
+      "PostgreSQL",
+      "Redis"
+    ],
+    "services": [
+      "voip.ms",
+      "Twilio"
+    ]
+  },
+  {
+    "surfaces": [
+      "Desktop"
+    ],
+    "languages": [
+      "Dart"
+    ],
+    "frameworks": [
+      "Flutter"
+    ],
+    "databases": [
+      "SQLite"
+    ],
+    "services": [
+      "Sentry"
+    ]
+  },
+  {
+    "surfaces": [
+      "Android",
+      "Web",
+      "iOS"
+    ],
+    "languages": [
+      "Dart",
+      "TypeScript"
+    ],
+    "frameworks": [
+      "Flutter",
+      "Node.js"
+    ],
+    "databases": [
+      "PostgreSQL"
+    ],
+    "services": [
+      "Firebase Auth",
+      "Stripe",
+      "Sentry"
+    ]
+  }
+]

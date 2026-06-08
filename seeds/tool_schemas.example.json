@@ -1,0 +1,281 @@
+{
+  "setup": [
+    {
+      "type": "function",
+      "function": {
+        "name": "generate_image",
+        "description": "Generate an image from a text description and show it to the user (e.g. a mock-up of a screen, a logo, a concept). Call this whenever the user asks to see / make / draw / show a picture during setup.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "description": "Detailed visual description."
+            },
+            "size": {
+              "type": "string",
+              "description": "WxH — 1024x1024 (default), 1024x1792, or 1792x1024."
+            }
+          },
+          "required": [
+            "prompt"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "edit_image",
+        "description": "Modify the most recent image with a described change (e.g. \"make the background blue\"). The latest image is used as the source.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "description": "The change to apply."
+            },
+            "size": {
+              "type": "string",
+              "description": "Optional output size."
+            }
+          },
+          "required": [
+            "prompt"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ask_question",
+        "description": "Ask the user ONE interview question and get their answer. It shows the options as buttons the user taps and returns their selection. Give a clear question plus 2-8 short options, and keep multi=true so the user can pick several.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "A single, clear question."
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "2-8 short, selectable choices."
+            },
+            "multi": {
+              "type": "boolean",
+              "description": "Whether the user may pick more than one. DEFAULTS TO TRUE; set false only for yes/no."
+            }
+          },
+          "required": [
+            "question",
+            "options"
+          ]
+        }
+      }
+    }
+  ],
+  "discovery": [
+    {
+      "type": "function",
+      "function": {
+        "name": "draft_stories_from_text",
+        "description": "When the user says a big chunk describing several things at once, pass their RAW text here. A helper splits it and rephrases each part into a clean user story (title + As a… I want… so that…) and adds them to the tree (optionally under parent_story_id).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The user's raw description to split."
+            },
+            "parent_story_id": {
+              "type": "string",
+              "description": "Optional parent id."
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "add_user_story",
+        "description": "Add a user story to the project story tree during discovery. Make it a child of an epic/story via parent_story_id to build the tree (epics → stories → sub-stories).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Short node title."
+            },
+            "narrative": {
+              "type": "string",
+              "description": "As a <role>, I want <goal>, so that <benefit>."
+            },
+            "acceptance_criteria": {
+              "type": "string",
+              "description": "Optional markdown bullets."
+            },
+            "parent_story_id": {
+              "type": "string",
+              "description": "Optional parent id to nest under."
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "epic",
+                "story",
+                "substory"
+              ]
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_user_story",
+        "description": "Update an existing user story (title, narrative, acceptance, status).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "story_id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "narrative": {
+              "type": "string"
+            },
+            "acceptance_criteria": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "confirmed",
+                "done"
+              ]
+            }
+          },
+          "required": [
+            "story_id"
+          ]
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_task",
+        "description": "Create a task. Write a concrete, stack-specific instruction with a clear objective, acceptance criteria, and a runnable verification.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Short imperative task title."
+            },
+            "description": {
+              "type": "string",
+              "description": "Objective + acceptance criteria + a verify command and its expected result."
+            },
+            "parent_task_id": {
+              "type": "string",
+              "description": "Optional parent task id."
+            },
+            "priority": {
+              "type": "string",
+              "enum": [
+                "HIGH",
+                "MED",
+                "LOW"
+              ]
+            },
+            "agent_persona_id": {
+              "type": "string",
+              "description": "Optional agent to assign."
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_task",
+        "description": "Update a task's title, description, or priority.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "priority": {
+              "type": "string",
+              "enum": [
+                "HIGH",
+                "MED",
+                "LOW"
+              ]
+            }
+          },
+          "required": [
+            "task_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_task_status",
+        "description": "Update a task's status.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "TODO",
+                "IN_PROGRESS",
+                "BLOCKED",
+                "DONE"
+              ]
+            }
+          },
+          "required": [
+            "task_id",
+            "status"
+          ]
+        }
+      }
+    }
+  ]
+}

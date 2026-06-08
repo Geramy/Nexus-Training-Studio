@@ -1,0 +1,82 @@
+{
+  "full_templates": [
+    "I want to build {name}: an app that {blurb}. It runs on {plats}. It should {objs}. Key features: {feats}. Build it in {langs} with {fws}, {dbs} for storage, and {svcs}.",
+    "Let's spec {name} — it {blurb}. Target platforms: {plats}. Goals: {objs}. Features I want: {feats}. Stack: {langs}/{fws}, {dbs}, plus {svcs}.",
+    "{name} is an app that {blurb}, for {plats}. It needs to {objs} and include {feats}. Use {langs} with {fws} and {dbs}; integrate {svcs}."
+  ],
+  "sparse_templates": [
+    "I want to build {name} — an app that {blurb}.",
+    "Let's set up {name}. It {blurb}.",
+    "Help me plan {name}: it {blurb}."
+  ],
+  "obj_questions": [
+    "Objectives — anything else it should do?",
+    "What are the main goals beyond what you mentioned?",
+    "Which of these should it handle?"
+  ],
+  "feat_questions": [
+    "Which features should it include?",
+    "What features matter most for v1?",
+    "Pick the features you want first."
+  ],
+  "constraints": [
+    "for about {n} users",
+    "on a tight budget",
+    "we're a small team"
+  ],
+  "style_prefix": [
+    "",
+    "",
+    ""
+  ],
+  "style_suffix": [
+    "",
+    "",
+    ""
+  ],
+  "ambiguous_ideas": [
+    [
+      "a lemonade stand",
+      [
+        "Food & Beverage",
+        "Retail"
+      ]
+    ],
+    [
+      "sell lemonade to people",
+      [
+        "Food & Beverage",
+        "Retail"
+      ]
+    ],
+    [
+      "a coffee shop that also sells beans and mugs",
+      [
+        "Food & Beverage",
+        "Retail"
+      ]
+    ]
+  ],
+  "vague_openers": [
+    [
+      "I want to make a mobile app",
+      [
+        "iOS",
+        "Android"
+      ]
+    ],
+    [
+      "I want to build a mobile app",
+      [
+        "iOS",
+        "Android"
+      ]
+    ],
+    [
+      "I'd like to build a web app",
+      [
+        "Web"
+      ]
+    ]
+  ]
+}

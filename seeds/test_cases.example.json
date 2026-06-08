@@ -1,0 +1,4 @@
+[
+  {"name": "objective phrasing (short atomic value)", "system": "You are the Nexus Coordinator. Use tools; keep objective values to tiny phrases, not sentences.", "prompt": "Create a task to build the login screen in Flutter.", "expect": []},
+  {"name": "tool-call intent", "prompt": "Add a postgresql table called users with id and email.", "expect": []}
+]

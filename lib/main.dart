@@ -47,6 +47,7 @@ const _stages = <_NavStage>[
   _NavStage(Icons.save_alt_outlined, '8 · Export GGUF'),
   _NavStage(Icons.cloud_upload_outlined, '9 · Upload'),
   _NavStage(Icons.storage_outlined, 'Models'),
+  _NavStage(Icons.tune, 'Seeds'),
 ];
 
 class StudioHome extends StatefulWidget {
@@ -63,6 +64,9 @@ class _StudioHomeState extends State<StudioHome> {
   final _ulDest = TextEditingController();
   final _newRepoName = TextEditingController();
   final _testModel = TextEditingController(text: 'workspace/fused');
+  final _seedCtl = TextEditingController();
+  List<String> _seedNames = [];
+  String? _seedSel;
   final _excelPath = TextEditingController();
   final _hfDataset = TextEditingController();
   final _hfSplit = TextEditingController(text: 'train');
@@ -153,6 +157,7 @@ class _StudioHomeState extends State<StudioHome> {
     await _server!.start();
     await _refreshModels();
     _loadData();
+    _loadSeeds();
     _addLog('Studio ready. Base model: $_baseModel  ·  Python env: '
         '${_pipeline.envReady ? "ready" : "NOT set up — go to step 1"}');
   }
@@ -185,6 +190,32 @@ class _StudioHomeState extends State<StudioHome> {
       _dataRows = _pipeline.datasetSummary(limit: 500);
       _dataTotal = _pipeline.datasetCount();
     });
+  }
+
+  void _loadSeeds() {
+    final names = _pipeline.seedNames();
+    setState(() {
+      _seedNames = names;
+      if (_seedSel == null && names.isNotEmpty) {
+        _seedSel = names.first;
+        _seedCtl.text = _pipeline.readSeed(_seedSel!);
+      }
+    });
+  }
+
+  void _openSeed(String name) {
+    setState(() {
+      _seedSel = name;
+      _seedCtl.text = _pipeline.readSeed(name);
+    });
+  }
+
+  void _saveSeed() {
+    if (_seedSel == null) return;
+    final err = _pipeline.writeSeed(_seedSel!, _seedCtl.text);
+    _addLog(err == null
+        ? '✓ saved seed "$_seedSel" (applies on next Generate)'
+        : 'Seed save failed: $err');
   }
 
   Future<void> _stepThenReloadData(
@@ -486,6 +517,8 @@ class _StudioHomeState extends State<StudioHome> {
         return _pageUpload(busy);
       case 10:
         return _pageModels(busy);
+      case 11:
+        return _pageSeeds(busy);
       default:
         return _pageOverview();
     }
@@ -1211,6 +1244,87 @@ class _StudioHomeState extends State<StudioHome> {
                 style: TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 12),
             Expanded(child: _modelsList(busy)),
+          ],
+        ),
+      );
+
+  Widget _pageSeeds(bool busy) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Seeds',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Editable training data (industries, app types, '
+                'libraries, phrasings, tool schemas). Saved to workspace/seeds/ '
+                '— applies on the next Generate.',
+                style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 12),
+            Row(children: [
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<String>(
+                  isDense: true,
+                  initialValue: _seedSel,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    labelText: 'Seed file',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final n in _seedNames)
+                      DropdownMenuItem(value: n, child: Text(n)),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) _openSeed(v);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonalIcon(
+                onPressed:
+                    _seedSel == null ? null : () => _openSeed(_seedSel!),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Reload'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: _seedSel == null ? null : _saveSeed,
+                icon: const Icon(Icons.save, size: 18),
+                label: const Text('Save'),
+              ),
+              const Spacer(),
+              Text(
+                  _seedSel == null
+                      ? ''
+                      : 'workspace/seeds/$_seedSel.json',
+                  style:
+                      const TextStyle(fontSize: 11, color: Colors.white54)),
+            ]),
+            const SizedBox(height: 10),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.all(8),
+                child: TextField(
+                  controller: _seedCtl,
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: Color(0xFFB9F6CA)),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ),
+            _navFooter(),
           ],
         ),
       );

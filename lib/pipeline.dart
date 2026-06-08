@@ -243,6 +243,60 @@ class Pipeline {
         if (limit != null && limit > 0) ...['--limit', '$limit'],
       ], 'Import HF dataset: $dataset');
 
+  // ── Seed data (editable JSON) — full in workspace/seeds, examples in seeds/ ─
+  String get _seedsDir => '$studioRoot/workspace/seeds';
+  String get _seedExamplesDir => '$studioRoot/seeds';
+
+  List<String> seedNames() {
+    final names = <String>{};
+    final w = Directory(_seedsDir);
+    if (w.existsSync()) {
+      for (final f in w.listSync()) {
+        if (f.path.endsWith('.json')) {
+          names.add(f.uri.pathSegments.last.replaceAll('.json', ''));
+        }
+      }
+    }
+    final e = Directory(_seedExamplesDir);
+    if (e.existsSync()) {
+      for (final f in e.listSync()) {
+        if (f.path.endsWith('.example.json')) {
+          names.add(f.uri.pathSegments.last.replaceAll('.example.json', ''));
+        }
+      }
+    }
+    return names.toList()..sort();
+  }
+
+  /// Read a seed's editable JSON; bootstraps the workspace copy from the example.
+  String readSeed(String name) {
+    final w = File('$_seedsDir/$name.json');
+    if (!w.existsSync()) {
+      final ex = File('$_seedExamplesDir/$name.example.json');
+      if (ex.existsSync()) {
+        w.parent.createSync(recursive: true);
+        w.writeAsStringSync(ex.readAsStringSync());
+      } else {
+        return '';
+      }
+    }
+    return w.readAsStringSync();
+  }
+
+  /// Validate + save a seed's JSON. Returns null on success, else an error.
+  String? writeSeed(String name, String content) {
+    try {
+      jsonDecode(content);
+    } catch (e) {
+      return 'Invalid JSON: $e';
+    }
+    File('$_seedsDir/$name.json')
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync(content);
+    onLog('✓ seed "$name" saved');
+    return null;
+  }
+
   // ── Canonical dataset (dataset.jsonl) CRUD — the UI table edits this ───────
   String get datasetPath => '$studioRoot/workspace/data/dataset.jsonl';
 

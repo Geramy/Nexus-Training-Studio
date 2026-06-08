@@ -132,6 +132,22 @@ class StudioServer {
         return _json(req, {'results': await pipeline.searchDatasets(q)});
       }
 
+      // ── Seed data (editable JSON) ────────────────────────────────────────
+      if (method == 'GET' && path == '/seeds') {
+        return _json(req, {'names': pipeline.seedNames()});
+      }
+      if (method == 'GET' && path.startsWith('/seeds/')) {
+        final name = path.substring('/seeds/'.length);
+        return _json(req, {'name': name, 'content': pipeline.readSeed(name)});
+      }
+      if (method == 'POST' && path.startsWith('/seeds/')) {
+        final name = path.substring('/seeds/'.length);
+        final obj = await _body(req);
+        final err = pipeline.writeSeed(name, '${obj['content'] ?? ''}');
+        if (err != null) return _bad(req, err);
+        return _json(req, {'saved': true, 'name': name});
+      }
+
       // ── Dataset table CRUD ───────────────────────────────────────────────
       if (method == 'GET' && path == '/data') {
         final limit = int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 500;

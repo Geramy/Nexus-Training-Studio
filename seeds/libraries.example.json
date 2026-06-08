@@ -1,0 +1,46 @@
+{
+  "Dart": [
+    [
+      "dio",
+      "pubdev",
+      "fresh"
+    ],
+    [
+      "riverpod",
+      "pubdev",
+      "fresh"
+    ],
+    [
+      "go_router",
+      "pubdev",
+      "fresh"
+    ],
+    [
+      "freezed",
+      "pubdev",
+      "fresh"
+    ]
+  ],
+  "TypeScript": [
+    [
+      "zod",
+      "github",
+      "fresh"
+    ],
+    [
+      "axios",
+      "github",
+      "fresh"
+    ],
+    [
+      "@tanstack/react-query",
+      "github",
+      "fresh"
+    ],
+    [
+      "zustand",
+      "github",
+      "fresh"
+    ]
+  ]
+}

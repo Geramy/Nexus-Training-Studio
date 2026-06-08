@@ -16,27 +16,13 @@ import argparse, json, os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CASES = os.path.join(ROOT, "workspace", "tests", "cases.jsonl")
 
-STARTER = [
-    {
-        "name": "objective phrasing (short atomic value)",
-        "system": "You are the Nexus Coordinator. Use tools; keep objective "
-                  "values to tiny phrases, not sentences.",
-        "prompt": "Create a task to build the login screen in Flutter.",
-        "expect": [],
-    },
-    {
-        "name": "tool-call intent",
-        "prompt": "Add a postgresql table called users with id and email.",
-        "expect": [],
-    },
-]
-
-
 def ensure_cases():
     if not os.path.exists(CASES):
+        from seedlib import load_seed
+        starter = load_seed("test_cases")        # editable JSON seed
         os.makedirs(os.path.dirname(CASES), exist_ok=True)
         with open(CASES, "w") as f:
-            for c in STARTER:
+            for c in starter:
                 f.write(json.dumps(c) + "\n")
         print(f"· wrote starter test cases → {CASES} (edit these for real tests)")
 

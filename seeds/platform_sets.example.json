@@ -1,0 +1,30 @@
+[
+  [
+    "iOS",
+    "Android"
+  ],
+  [
+    "Web"
+  ],
+  [
+    "iOS",
+    "Android",
+    "Web"
+  ],
+  [
+    "Web",
+    "Cloud/Server"
+  ],
+  [
+    "Desktop"
+  ],
+  [
+    "Cloud/Server"
+  ],
+  [
+    "iOS",
+    "Android",
+    "Web",
+    "Cloud/Server"
+  ]
+]
