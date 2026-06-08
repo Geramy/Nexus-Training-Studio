@@ -161,6 +161,18 @@ def main():
     print(f"  function-name exact:  {name_ok}/{total}  ({pct(name_ok)})")
     print(f"  arguments exact:      {args_ok}/{total}  ({pct(args_ok)})")
     print(f"  argument-keys match:  {key_ok}/{total}  ({pct(key_ok)})")
+
+    # Write a result the UI can read + chart.
+    result = {
+        "total": total, "parsed": parsed,
+        "function_name_pct": round(100 * name_ok / total, 1),
+        "args_exact_pct": round(100 * args_ok / total, 1),
+        "arg_keys_pct": round(100 * key_ok / total, 1),
+        "model": args.model, "adapter": args.adapter,
+    }
+    Path("workspace").mkdir(exist_ok=True)
+    Path("workspace/eval_result.json").write_text(json.dumps(result, indent=2))
+    print("· wrote workspace/eval_result.json")
     return 0
 
 

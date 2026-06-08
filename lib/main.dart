@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1042,6 +1043,11 @@ class _StudioHomeState extends State<StudioHome> {
             _btn('Train (LoRA)', Icons.model_training_outlined,
                 busy ? null : () => _step('training', _pipeline.train)),
           ]),
+          const SizedBox(height: 12),
+          const Text('Training loss (live)',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 6),
+          _lossChart(),
         ],
       );
 
@@ -1105,9 +1111,13 @@ class _StudioHomeState extends State<StudioHome> {
             _btn('Eval tool-calls', Icons.rule,
                 busy
                     ? null
-                    : () => _step('eval-tools', () => _pipeline.evalToolCalls(
-                        model: _testModel.text.trim()))),
+                    : () async {
+                        await _step('eval-tools', () => _pipeline.evalToolCalls());
+                        if (mounted) setState(() {});
+                      }),
           ]),
+          const SizedBox(height: 12),
+          _evalPanel(),
           const SizedBox(height: 8),
           const Text('"Eval tool-calls" scores name + JSON-args exact-match on '
               'held-out valid.jsonl (BFCL-style). Edit cases in '
@@ -1330,6 +1340,143 @@ class _StudioHomeState extends State<StudioHome> {
       );
 
   // ════════════════════════════ WIDGETS ════════════════════════════
+
+  // ── Live training-loss chart (parsed from the log) ──
+  List<List<FlSpot>> _lossSeries() {
+    final tr = <FlSpot>[], va = <FlSpot>[];
+    final rt = RegExp(r'Iter (\d+): Train loss ([0-9.]+)');
+    final rv = RegExp(r'Iter (\d+): Val loss ([0-9.]+)');
+    for (final l in _log) {
+      final mt = rt.firstMatch(l);
+      if (mt != null) {
+        tr.add(FlSpot(double.parse(mt.group(1)!), double.parse(mt.group(2)!)));
+      }
+      final mv = rv.firstMatch(l);
+      if (mv != null) {
+        va.add(FlSpot(double.parse(mv.group(1)!), double.parse(mv.group(2)!)));
+      }
+    }
+    return [tr, va];
+  }
+
+  Widget _legendDot(Color c, String l) => Row(mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
+        const SizedBox(width: 4),
+        Text(l, style: const TextStyle(fontSize: 12)),
+      ]);
+
+  Widget _lossChart() {
+    final s = _lossSeries();
+    final tr = s[0], va = s[1];
+    if (tr.isEmpty && va.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Center(
+              child: Text('No training loss yet — start a run to see the '
+                  'curve here, live.')),
+        ),
+      );
+    }
+    var mx = 1.0, my = 0.1;
+    for (final p in [...tr, ...va]) {
+      if (p.x > mx) mx = p.x;
+      if (p.y > my) my = p.y;
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 14, 16, 10),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            _legendDot(Colors.lightBlueAccent, 'train'),
+            const SizedBox(width: 14),
+            _legendDot(Colors.orangeAccent, 'val'),
+            const Spacer(),
+            Text(
+                tr.isNotEmpty
+                    ? 'iter ${tr.last.x.toInt()} · train '
+                        '${tr.last.y.toStringAsFixed(3)}'
+                        '${va.isNotEmpty ? " · val ${va.last.y.toStringAsFixed(3)}" : ""}'
+                    : '',
+                style: const TextStyle(fontSize: 11, color: Colors.white54)),
+          ]),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 240,
+            child: LineChart(LineChartData(
+              minX: 0,
+              maxX: mx,
+              minY: 0,
+              maxY: my * 1.15,
+              gridData: const FlGridData(show: true),
+              borderData: FlBorderData(show: false),
+              titlesData: const FlTitlesData(
+                topTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                    spots: tr,
+                    isCurved: false,
+                    color: Colors.lightBlueAccent,
+                    barWidth: 2,
+                    dotData: const FlDotData(show: false)),
+                LineChartBarData(
+                    spots: va,
+                    isCurved: false,
+                    color: Colors.orangeAccent,
+                    barWidth: 2,
+                    dotData: const FlDotData(show: false)),
+              ],
+            )),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  // ── Last tool-call eval, as percentages ──
+  Widget _evalPanel() {
+    final r = _pipeline.lastEvalResult();
+    if (r == null) return const SizedBox.shrink();
+    Widget metric(String label, num pct, Color c) => Expanded(
+          child: Column(children: [
+            Text('${(pct).toStringAsFixed(1)}%',
+                style: TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold, color: c)),
+            Text(label,
+                style: const TextStyle(fontSize: 11, color: Colors.white70)),
+          ]),
+        );
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Text('Last tool-call eval',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Text('${r['total']} held-out calls · ${r['parsed']} parsed',
+                style: const TextStyle(fontSize: 11, color: Colors.white54)),
+          ]),
+          const SizedBox(height: 12),
+          Row(children: [
+            metric('function name', (r['function_name_pct'] as num),
+                Colors.greenAccent),
+            metric('arg keys', (r['arg_keys_pct'] as num), Colors.greenAccent),
+            metric('args exact', (r['args_exact_pct'] as num),
+                Colors.amberAccent),
+          ]),
+        ]),
+      ),
+    );
+  }
 
   Widget _destRepoField() {
     final items = <DropdownMenuItem<String>>[

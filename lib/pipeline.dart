@@ -200,13 +200,30 @@ class Pipeline {
   Future<int> evaluate() =>
       _run(_python, ['py/eval.py', '--model', 'workspace/fused'], 'Eval (fused)');
 
-  /// BFCL-style tool-call eval: replay held-out convs, score name/args match.
-  Future<int> evalToolCalls({String? model, int limit = 100}) => _run(
-        _python,
-        ['py/eval_toolcalls.py', '--model', model ?? 'workspace/fused',
-            '--limit', '$limit'],
-        'Tool-call eval (${model ?? "workspace/fused"})',
-      );
+  /// BFCL-style tool-call eval. Defaults to the TRAINED model = 8-bit base +
+  /// the LoRA adapter (no fuse needed). Writes workspace/eval_result.json.
+  Future<int> evalToolCalls({String? model, String? adapter, int limit = 120}) {
+    final m = model ?? (base8bitReady ? base8bitPath : baseModel);
+    final a = adapter ?? '$studioRoot/workspace/adapters';
+    final hasAdapter = File('$a/adapters.safetensors').existsSync();
+    return _run(_python, [
+      'py/eval_toolcalls.py', '--model', m,
+      if (hasAdapter) ...['--adapter', a],
+      '--limit', '$limit',
+    ], 'Tool-call eval${hasAdapter ? " (base + adapter)" : ""}');
+  }
+
+  /// The last eval's percentages, for the UI panel (null if none yet).
+  Map<String, dynamic>? lastEvalResult() {
+    final f = File('$studioRoot/workspace/eval_result.json');
+    if (!f.existsSync()) return null;
+    try {
+      final d = jsonDecode(f.readAsStringSync());
+      return d is Map<String, dynamic> ? d : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Run the fine-tuned model against the use/test cases in workspace/tests and
   /// report pass/fail per case. [model] defaults to the fused fine-tune.
