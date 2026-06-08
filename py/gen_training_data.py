@@ -882,6 +882,12 @@ def generate(target, kinds, seed):
         if "setup" in kinds:
             for b in SETUP_VARIANTS:
                 convos.append({**b(p, R), "tools": tools_for("setup")})
+            # Weight the ambiguous-industry case up so "ask which industry"
+            # becomes a learned default for cross-industry ideas (was too rare
+            # at 1/8, so the model defaulted to confident single-industry tags).
+            for _ in range(2):
+                convos.append({**build_setup_ambiguous(p, R),
+                               "tools": tools_for("setup")})
         if "discovery" in kinds:
             # two discovery variants (draft vs manual chosen inside)
             for _ in range(2):
