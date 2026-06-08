@@ -25,8 +25,14 @@ echo "▶ fuse adapter (de-quantized to f16) → workspace/fused"
   --save-path workspace/fused \
   --dequantize
 
+# Remap MLX's fused tensor names (mixer.switch_mlp.fc1/fc2) to the HF names the
+# llama.cpp NemotronH converter expects (mixer.experts.N.{up,down}_proj).
+echo "▶ remap MLX → HF tensor names → workspace/fused-hf"
+rm -rf workspace/fused-hf
+"$CONVERT_PY" py/remap_mlx_to_hf.py workspace/fused workspace/fused-hf
+
 echo "▶ convert → GGUF f16"
-"$CONVERT_PY" "$LLAMA/convert_hf_to_gguf.py" workspace/fused \
+"$CONVERT_PY" "$LLAMA/convert_hf_to_gguf.py" workspace/fused-hf \
   --outfile workspace/gguf/model-f16.gguf --outtype f16
 
 bin() { [ -x "$LLAMA/build/bin/$1" ] && echo "$LLAMA/build/bin/$1" || echo "$LLAMA/$1"; }
