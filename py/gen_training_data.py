@@ -277,6 +277,52 @@ def _fmt_list(xs):
 
 # ───────────────────────── conversation builders ───────────────────────────
 
+def _libraries_phase(ids, p, R, msgs):
+    """Append the LIBRARIES lookup step — every setup does this before finalizing:
+    scope the candidates, verify each on the internet, add the maintained ones and
+    dismiss the stale. Mutates msgs. This is what makes the step actually finish."""
+    lang = p["languages"][0]
+    pool = LIBRARIES.get(lang) or LIBRARIES["TypeScript"]
+    cands = R.sample(pool, min(R.randint(2, 3), len(pool)))
+    eco = cands[0][1]
+    cid, call = tool_call(ids, "scope_options", {
+        "category": "libraries", "platform": _platform_bucket(p["platforms"])})
+    msgs.append(asst_calls([call], content=(
+        f"Before I finalize, let me pick {lang} libraries and verify they're "
+        f"current.")))
+    msgs.append(tool_result(cid, {"libraries": [c[0] for c in cands]},
+                            "scope_options"))
+    lookups = []
+    for name, ecosystem, verdict in cands:
+        cid, call = tool_call(ids, "lookup_package",
+                              {"name": name, "ecosystem": ecosystem})
+        lookups.append((cid, call, name, verdict))
+    msgs.append(asst_calls([c for _, c, _, _ in lookups], content=(
+        f"Checking each on {'pub.dev' if eco == 'pubdev' else 'GitHub'}.")))
+    for cid, _, name, verdict in lookups:
+        days = 25 if verdict in ("fresh", "aging") else 950
+        msgs.append(tool_result(
+            cid, {"name": name, "verdict": verdict, "last_release_days": days},
+            "lookup_package"))
+    keep = [(n, v) for _, _, n, v in lookups if v in ("fresh", "aging")]
+    drop = [(n, v) for _, _, n, v in lookups if v in ("stale", "dead")]
+    dec = []
+    if keep:
+        cid, call = tool_call(ids, "propose_tags", {
+            "tags": [{"category": "libraries", "value": n, "forLanguage": lang}
+                     for n, _ in keep]})
+        dec.append((cid, call, "propose_tags"))
+    for n, v in drop:
+        cid, call = tool_call(ids, "dismiss_item",
+                              {"name": n, "reason": f"{v} — not maintained"})
+        dec.append((cid, call, "dismiss_item"))
+    if dec:
+        msgs.append(asst_calls([c for _, c, _ in dec], content=(
+            "Adding the maintained ones, skipping the stale.")))
+        for cid, _, nm in dec:
+            msgs.append(tool_result(cid, {"ok": True}, nm))
+
+
 def build_setup_full(p, R):
     ids = Ids()
     msg = R.choice(FULL_TEMPLATES).format(
@@ -289,6 +335,7 @@ def build_setup_full(p, R):
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, {"ok": True, "added": len(_all_tags(p))},
                             "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call], content=(
         f"You gave me everything — tagged the {p['industries'][0]} domain, "
@@ -330,6 +377,7 @@ def build_setup_infer(p, R):
         f"Adding those features and a {p['languages'][0]}/{p['frameworks'][0]} "
         f"stack.")))
     msgs.append(tool_result(cid, {"ok": True}, "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
@@ -378,6 +426,7 @@ def build_setup_partial(p, R):
         f"{p['databases'][0]}.")))
     msgs.append(tool_result(cid, {"ok": True, "added": len(_stack_tags(p))},
                             "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
@@ -503,6 +552,7 @@ def build_setup_ambiguous(p, R):
                 + _stack_tags(p)})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, {"ok": True}, "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
@@ -562,6 +612,7 @@ def build_setup_vague(p, R):
                 + _stack_tags(p)})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, {"ok": True}, "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
@@ -598,6 +649,7 @@ def build_setup_recovery(p, R):
     cid, call = tool_call(ids, "propose_tags", {"tags": fill})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, {"ok": True, "added": len(fill)}, "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call], content="Everything's tagged now — finalizing."))
     msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
@@ -635,6 +687,7 @@ def build_setup_image(p, R):
                 + _stack_tags(p)})
     msgs.append(asst_calls([call]))
     msgs.append(tool_result(cid, {"ok": True}, "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
     cid, call = tool_call(ids, "finalize_setup", {})
     msgs.append(asst_calls([call], content="Looks good — finalizing the plan."))
     msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
