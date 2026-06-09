@@ -193,69 +193,54 @@ def main():
     ap.add_argument("--max-turns", type=int, default=16)
     ap.add_argument("--label", default="trained",
                     help="which side of the A/B this run is: 'base' or 'trained'")
+    ap.add_argument("--case", type=int, default=None,
+                    help="run ONLY this 1-based case for a CLEAN per-case TPS/PP "
+                         "(no batch warmup blending); default runs all")
     args = ap.parse_args()
 
     tools = json.loads((SEEDS / "tool_schemas.json").read_text())["setup"]
     system_t = json.loads((SEEDS / "prompts.json").read_text())["setup_system"]
-
-    cases = load_cases()
+    all_cases = load_cases()
     out_dir = Path("workspace/interview_runs")
-    runs = []
-    for i in range(min(args.scenarios, len(cases))):
-        idea = cases[i]["idea"]
-        r = simulate(args.endpoint, args.model, system_t.format(name=f"App{i+1}"),
+
+    # Which seed cases to run: a single 1-based --case, else the first --scenarios.
+    if args.case is not None:
+        idxs = [args.case - 1] if 1 <= args.case <= len(all_cases) else []
+    else:
+        idxs = list(range(min(args.scenarios, len(all_cases))))
+    if not idxs:
+        print("no cases to run (check --case range)"); return 1
+
+    def case_result(i, r):
+        tps = statistics.mean(r["tps"]) if r["tps"] else None
+        pps = statistics.mean(r["pps"]) if r["pps"] else None
+        return {"idea": r["idea"], "finalized": r["finalized"],
+                "covered": not r["missing"], "repeats": r["repeats"],
+                "asks": len(r["asked"]), "turns": r["turns"],
+                "tps": round(tps, 1) if tps else None,
+                "pps": round(pps, 1) if pps else None,
+                "transcript": f"workspace/interview_runs/{args.model}-{i + 1:02d}.md"}
+
+    ran = {}
+    for i in idxs:
+        idea = all_cases[i]["idea"]
+        r = simulate(args.endpoint, args.model, system_t.format(name=f"App{i + 1}"),
                      tools, idea, args.max_turns)
         if "error" in r:
-            print(f"  scenario {i+1}: ERROR {r['error']}"); continue
-        md = write_transcript(out_dir, args.model, i + 1, r)
-        ok_cov, ok_once = not r["missing"], not r["repeats"]
-        flag = "OK " if (ok_cov and ok_once and r["finalized"]) else "!! "
-        print(f"  {flag}#{i+1} {idea[:40]!r:42} finalized={r['finalized']} "
-              f"covered={ok_cov} repeats={r['repeats'] or '-'} asks={len(r['asked'])} "
-              f"turns={r['turns']}  → {md}")
-        runs.append(r)
-    print(f"\nTranscripts (Markdown + JSON) written to: {out_dir}/")
-
-    if not runs:
+            print(f"  case {i + 1}: ERROR {r['error']}"); continue
+        write_transcript(out_dir, args.model, i + 1, r)
+        cr = case_result(i, r)
+        ran[i] = cr
+        flag = "OK " if (cr["covered"] and not cr["repeats"] and cr["finalized"]) \
+            else "!! "
+        print(f"  {flag}#{i + 1} {idea[:38]!r:40} cov={cr['covered']} "
+              f"once={not cr['repeats']} fin={cr['finalized']} "
+              f"tps={cr['tps']} pps={cr['pps']}")
+    if not ran:
         print("no successful runs"); return 1
-    n = len(runs)
-    cov = sum(not r["missing"] for r in runs)
-    once = sum(not r["repeats"] for r in runs)
-    fin = sum(r["finalized"] for r in runs)
-    clean = sum(not r["missing"] and not r["repeats"] and r["finalized"] for r in runs)
-    all_tps = [x for r in runs for x in r["tps"]]
-    all_pps = [x for r in runs for x in r["pps"]]
-    pct = lambda k: f"{100*k/n:.0f}%"  # noqa: E731
-    print(f"\n=== Interview eval over {n} scenarios ===")
-    print(f"  COVERAGE (all required tagged):   {cov}/{n}  ({pct(cov)})")
-    print(f"  ONCE-ONLY (no topic re-asked):    {once}/{n}  ({pct(once)})")
-    print(f"  COMPLETES (reached finalize):     {fin}/{n}  ({pct(fin)})")
-    print(f"  CLEAN (all three):                {clean}/{n}  ({pct(clean)})")
-    print(f"  avg ask_questions / interview:    {statistics.mean(len(r['asked']) for r in runs):.1f}")
-    if all_tps:
-        print(f"  TPS  (gen tok/s):   mean {statistics.mean(all_tps):.1f}  "
-              f"min {min(all_tps):.1f}  max {max(all_tps):.1f}")
-    if all_pps:
-        print(f"  PP/s (prompt tok/s): mean {statistics.mean(all_pps):.1f}  "
-              f"min {min(all_pps):.1f}  max {max(all_pps):.1f}")
 
-    # Persist keyed by A/B label (base|trained) so both sides coexist for a
-    # side-by-side comparison, mirroring eval_result.json.
-    res = {
-        "model": args.model, "endpoint": args.endpoint, "scenarios": n,
-        "coverage_pct": round(100 * cov / n, 1),
-        "once_only_pct": round(100 * once / n, 1),
-        "completes_pct": round(100 * fin / n, 1),
-        "clean_pct": round(100 * clean / n, 1),
-        "avg_asks": round(statistics.mean(len(r["asked"]) for r in runs), 2),
-        "tps_mean": round(statistics.mean(all_tps), 1) if all_tps else None,
-        "pps_mean": round(statistics.mean(all_pps), 1) if all_pps else None,
-        "transcripts": [f"workspace/interview_runs/{args.model}-{i+1:02d}.md"
-                        for i in range(len(runs))],
-        "cases": [{"idea": r["idea"], "finalized": r["finalized"],
-                   "covered": not r["missing"], "repeats": r["repeats"],
-                   "asks": len(r["asked"]), "turns": r["turns"]} for r in runs],
-    }
+    # Merge into the keyed result, keeping a per-seed-index `cases` list so a single
+    # --case updates just its slot (clean per-case numbers) and the rest persist.
     out = Path("workspace/interview_result.json")
     out.parent.mkdir(exist_ok=True)
     data = {}
@@ -264,11 +249,31 @@ def main():
             data = json.loads(out.read_text())
         except Exception:  # noqa: BLE001
             data = {}
-    if "coverage_pct" in data:  # migrate an old flat result → keyed
+    if "coverage_pct" in data:  # migrate a legacy flat result → keyed
         data = {"trained": data}
-    data[args.label] = res
+    cases = (data.get(args.label, {}).get("cases") or [])
+    while len(cases) < len(all_cases):
+        cases.append(None)
+    for i, cr in ran.items():
+        cases[i] = cr
+
+    done = [c for c in cases if c]
+    n = len(done)
+    tpsv = [c["tps"] for c in done if c.get("tps")]
+    ppsv = [c["pps"] for c in done if c.get("pps")]
+    data[args.label] = {
+        "model": args.model, "endpoint": args.endpoint, "scenarios": n,
+        "coverage_pct": round(100 * sum(1 for c in done if c["covered"]) / n, 1),
+        "once_only_pct": round(100 * sum(1 for c in done if not c["repeats"]) / n, 1),
+        "completes_pct": round(100 * sum(1 for c in done if c["finalized"]) / n, 1),
+        "avg_asks": round(statistics.mean(c["asks"] for c in done), 2),
+        "tps_mean": round(statistics.mean(tpsv), 1) if tpsv else None,
+        "pps_mean": round(statistics.mean(ppsv), 1) if ppsv else None,
+        "cases": cases,
+    }
     out.write_text(json.dumps(data, indent=2))
-    print(f"· wrote workspace/interview_result.json [{args.label}]")
+    print(f"· wrote interview_result.json [{args.label}] "
+          f"({len(ran)} this run, {n} total) — transcripts in {out_dir}/")
     return 0
 
 

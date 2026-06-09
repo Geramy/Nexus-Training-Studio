@@ -235,11 +235,12 @@ class Pipeline {
   /// workspace/interview_runs. Test cases live in the editable interview_cases seed.
   Future<int> evalInterview(
           {required String endpoint, String model = 'gguf', int scenarios = 8,
-          String label = 'trained'}) =>
+          String label = 'trained', int? caseIndex}) =>
       _run(_python, [
         'py/eval_interview.py', '--endpoint', endpoint,
         '--model', model, '--scenarios', '$scenarios', '--label', label,
-      ], 'Interview eval ($label)');
+        if (caseIndex != null) ...['--case', '$caseIndex'],
+      ], 'Interview eval ($label${caseIndex != null ? ' #$caseIndex' : ''})');
 
   /// The last interview eval's metrics for the UI panel (null if none yet).
   Map<String, dynamic>? lastInterviewResult() {

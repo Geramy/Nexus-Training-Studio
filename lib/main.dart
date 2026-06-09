@@ -1201,6 +1201,7 @@ class _StudioHomeState extends State<StudioHome> {
           _abModelRow('Original', 'base', _baseGguf, busy),
           const SizedBox(height: 6),
           _abModelRow('Trained', 'trained', _trainedGguf, busy),
+          _interviewCasesPanel(busy),
           const SizedBox(height: 12),
           _interviewPanel(),
           const SizedBox(height: 8),
@@ -1668,7 +1669,7 @@ class _StudioHomeState extends State<StudioHome> {
         if (mounted) setState(() {});
       }),
       const SizedBox(width: 4),
-      _btn('Run', Icons.forum_outlined,
+      _btn('Run all', Icons.forum_outlined,
           (busy || !running)
               ? null
               : () async {
@@ -1678,6 +1679,102 @@ class _StudioHomeState extends State<StudioHome> {
                           endpoint: _pipeline.endpointFor(label), label: label));
                   if (mounted) setState(() {});
                 }),
+    ]);
+  }
+
+  // The editable interview test-case ideas (from the seed) for per-case runs.
+  List<String> get _interviewCases {
+    try {
+      final f = File(
+          '${_pipeline.studioRoot}/workspace/seeds/interview_cases.json');
+      if (!f.existsSync()) return const [];
+      final d = jsonDecode(f.readAsStringSync());
+      final cases = (d['cases'] as List?) ?? const [];
+      return [for (final c in cases) (c['idea'] ?? '').toString()];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  // Per-case run rows — run each test ON ITS OWN so TPS/PP aren't blended by the
+  // batch (cold first request + KV-cache warmup). Each side shows that case's
+  // covered/once + TPS/PP and a Run button (enabled while its server is up).
+  Widget _interviewCasesPanel(bool busy) {
+    final cases = _interviewCases;
+    if (cases.isEmpty) return const SizedBox.shrink();
+    final res = _pipeline.lastInterviewResult() ?? const {};
+    final baseCases = ((res['base'] as Map?)?['cases'] as List?) ?? const [];
+    final trainedCases =
+        ((res['trained'] as Map?)?['cases'] as List?) ?? const [];
+    Map? at(List l, int i) => (i < l.length && l[i] is Map) ? l[i] as Map : null;
+
+    Widget sideCell(Map? c, String label, int idx) {
+      final up = _pipeline.serverRunning(label);
+      final cov = c?['covered'] == true;
+      final once = (c?['repeats'] as List?)?.isEmpty ?? false;
+      return Row(mainAxisSize: MainAxisSize.min, children: [
+        SizedBox(
+          width: 116,
+          child: Text(
+              c == null
+                  ? '—'
+                  : '${cov ? '✓' : '✗'}${once ? '' : '⟳'}  '
+                      '${c['tps'] ?? '–'}t ${c['pps'] ?? '–'}p',
+              style: TextStyle(
+                  fontSize: 11,
+                  color: c == null
+                      ? Colors.white38
+                      : (cov && once
+                          ? Colors.greenAccent
+                          : Colors.orangeAccent))),
+        ),
+        IconButton(
+          iconSize: 16,
+          visualDensity: VisualDensity.compact,
+          tooltip: 'Run case ${idx + 1} on $label',
+          onPressed: (busy || !up)
+              ? null
+              : () async {
+                  await _step(
+                      'interview-$label-#${idx + 1}',
+                      () => _pipeline.evalInterview(
+                          endpoint: _pipeline.endpointFor(label),
+                          label: label,
+                          caseIndex: idx + 1));
+                  if (mounted) setState(() {});
+                },
+          icon: const Icon(Icons.play_arrow),
+        ),
+      ]);
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const SizedBox(height: 8),
+      Row(children: const [
+        Expanded(
+            child: Text('Run cases individually — clean per-case TPS/PP',
+                style: TextStyle(fontSize: 12, color: Colors.white70))),
+        SizedBox(
+            width: 132,
+            child: Text('original', style: TextStyle(fontSize: 11, color: Colors.white54))),
+        SizedBox(
+            width: 132,
+            child: Text('trained', style: TextStyle(fontSize: 11, color: Colors.white54))),
+      ]),
+      for (int i = 0; i < cases.length; i++)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1),
+          child: Row(children: [
+            Expanded(
+                child: Text('${i + 1}. ${cases[i]}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        const TextStyle(fontSize: 12, color: Colors.white70))),
+            sideCell(at(baseCases, i), 'base', i),
+            sideCell(at(trainedCases, i), 'trained', i),
+          ]),
+        ),
     ]);
   }
 
