@@ -71,11 +71,11 @@ class _StudioHomeState extends State<StudioHome> {
   final _excelPath = TextEditingController();
   final _hfDataset = TextEditingController();
   final _hfSplit = TextEditingController(text: 'train');
-  // GGUF paths for the interview A/B — the studio serves each via llama-server
-  // (original on :8098, trained on :8099) so the two can be compared.
+  // Selected GGUF path per interview-A/B side — the studio serves each via
+  // llama-server (original on :8098, trained on :8099). Populated from a dropdown
+  // of GGUFs discovered in your folders (auto-selected, overridable).
   final _baseGguf = TextEditingController();
-  final _trainedGguf =
-      TextEditingController(text: 'workspace/gguf/model-Q4_K_M.gguf');
+  final _trainedGguf = TextEditingController();
   List<Map<String, dynamic>> _dataRows = [];
   int _dataTotal = 0;
   String _dataFilter = 'all';
@@ -1587,30 +1587,76 @@ class _StudioHomeState extends State<StudioHome> {
   }
 
   // ── End-to-end interview eval (served GGUF): coverage / once-only / TPS ──
-  // One A/B model row: path + browse + Start/Stop toggle + Run (when serving).
+  // Every GGUF we can serve: the studio's own workspace/gguf exports + every
+  // .gguf the scanner found (LM Studio / HF cache / lemonade / extra dirs).
+  List<({String path, String label})> get _ggufOptions {
+    final out = <({String path, String label})>[];
+    final seen = <String>{};
+    for (final q in ['model-Q4_K_M', 'model-Q8_0', 'model-Q6_K', 'model-f16']) {
+      final p = '${_pipeline.studioRoot}/workspace/gguf/$q.gguf';
+      if (File(p).existsSync() && seen.add(p)) {
+        out.add((path: p, label: '$q.gguf · trained export'));
+      }
+    }
+    for (final m in _models) {
+      if (m.format == 'gguf' && seen.add(m.path)) {
+        out.add((path: m.path, label: '${m.name} · ${m.source}'));
+      }
+    }
+    return out;
+  }
+
+  // One A/B model row: dropdown of discovered GGUFs + browse + Start/Stop + Run.
   Widget _abModelRow(
       String title, String label, TextEditingController ctl, bool busy) {
     final running = _pipeline.serverRunning(label);
+    final opts = [..._ggufOptions];
+    final current = ctl.text.trim();
+    if (current.isNotEmpty && !opts.any((o) => o.path == current)) {
+      opts.insert(0,
+          (path: current, label: '${current.split('/').last} · custom'));
+    }
+    final value = opts.any((o) => o.path == current) ? current : null;
     return Row(children: [
       SizedBox(
           width: 64,
           child: Text(title,
               style: const TextStyle(fontSize: 13, color: Colors.white70))),
       Expanded(
-        child: TextField(
-          controller: ctl,
-          style: const TextStyle(fontSize: 12),
-          decoration: const InputDecoration(
+        child: Container(
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white24),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
               isDense: true,
-              hintText: 'path to .gguf',
-              border: OutlineInputBorder()),
+              value: value,
+              hint: const Text('choose a .gguf found in your folders',
+                  style: TextStyle(fontSize: 12, color: Colors.white38)),
+              style: const TextStyle(fontSize: 12),
+              items: [
+                for (final o in opts)
+                  DropdownMenuItem(
+                      value: o.path,
+                      child: Text(o.label,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12)))
+              ],
+              onChanged:
+                  running ? null : (v) => setState(() => ctl.text = v ?? ''),
+            ),
+          ),
         ),
       ),
       _browseBtn(
           () => _pickFileInto(ctl, groups: const [
                 XTypeGroup(label: 'gguf', extensions: ['gguf'])
               ]),
-          tip: 'Choose .gguf'),
+          tip: 'Browse for a .gguf'),
       const SizedBox(width: 4),
       _btn(running ? 'Stop' : 'Start',
           running ? Icons.stop_circle_outlined : Icons.play_arrow, () async {
