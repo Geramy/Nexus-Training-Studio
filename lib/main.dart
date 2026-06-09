@@ -189,6 +189,56 @@ class _StudioHomeState extends State<StudioHome> {
     final m = await _scanner.scan();
     setState(() => _models = m);
     _addLog('Scanned ${m.length} local model(s).');
+    _autofillInterviewModels();
+  }
+
+  // Auto-discover the project's ORIGINAL (base) and TRAINED GGUFs from folders so
+  // the A/B never needs manual picking. Trained prefers the studio's own export;
+  // original is a scanned GGUF that matches the base model name but carries no
+  // fine-tune marker. Only fills a field the user hasn't set/browsed.
+  void _autofillInterviewModels() {
+    const trainedMarkers = ['nexus', 'agents', 'tuned', 'lora', 'finetune'];
+    final keys = _baseModel
+        .split('/')
+        .last
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]'), ' ')
+        .split(' ')
+        .where((t) => t.length > 1 && t != 'bf16' && t != 'gguf')
+        .toList();
+    bool matchesBase(String n) =>
+        keys.isNotEmpty &&
+        keys.where((k) => n.contains(k)).length >= (keys.length / 2).ceil();
+    final ggufs = _models.where((m) => m.format == 'gguf').toList();
+
+    String? pick(bool Function(String name) ok) {
+      for (final m in ggufs) {
+        if (ok(m.name.toLowerCase())) return m.path;
+      }
+      return null;
+    }
+
+    // Trained: the studio export wins; else a scanned GGUF marked as ours.
+    final exportedTrained = ['model-Q4_K_M', 'model-Q8_0', 'model-Q6_K']
+        .map((q) => '${_pipeline.studioRoot}/workspace/gguf/$q.gguf')
+        .firstWhere((p) => File(p).existsSync(), orElse: () => '');
+    final trained = exportedTrained.isNotEmpty
+        ? exportedTrained
+        : pick((n) => trainedMarkers.any(n.contains) && matchesBase(n));
+    // Original: matches the base, but NOT a fine-tune.
+    final original = pick((n) => matchesBase(n) && !trainedMarkers.any(n.contains)) ??
+        pick(matchesBase);
+
+    setState(() {
+      if (trained != null && trained.isNotEmpty) _trainedGguf.text = trained;
+      if (original != null && _baseGguf.text.trim().isEmpty) {
+        _baseGguf.text = original;
+      }
+    });
+    if (original == null) {
+      _addLog('A/B: no original (base) GGUF found in folders — pick one or '
+          'export/download a base GGUF.');
+    }
   }
 
   void _loadData() {

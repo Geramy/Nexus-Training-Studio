@@ -275,10 +275,14 @@ class Pipeline {
       onLog('⚠ $label model server already running on :${serverPort(label)}.');
       return true;
     }
-    if (!File(gguf).existsSync()) {
-      onLog('✗ $label model not found: $gguf');
+    // Accept an absolute path or one relative to the studio root (e.g. the
+    // exported workspace/gguf/*.gguf).
+    final path = gguf.startsWith('/') ? gguf : '$studioRoot/$gguf';
+    if (!File(path).existsSync()) {
+      onLog('✗ $label model not found: $path');
       return false;
     }
+    gguf = path;
     final bin = File('$llamaCppDir/build/bin/llama-server').existsSync()
         ? '$llamaCppDir/build/bin/llama-server'
         : '$llamaCppDir/llama-server';
