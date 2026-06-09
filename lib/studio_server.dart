@@ -250,6 +250,14 @@ class StudioServer {
                 model: obj['model'] as String?,
                 limit: int.tryParse('${obj['limit'] ?? 100}') ?? 100);
             break;
+          case 'interview-eval':
+            fut = pipeline.evalInterview(
+                endpoint: (obj['endpoint'] ??
+                        'http://127.0.0.1:8099/v1/chat/completions')
+                    .toString(),
+                model: (obj['model'] ?? 'gguf').toString(),
+                scenarios: int.tryParse('${obj['scenarios'] ?? 8}') ?? 8);
+            break;
           case 'export':
             fut = pipeline.exportGguf();
             break;

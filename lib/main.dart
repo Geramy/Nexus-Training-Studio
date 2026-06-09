@@ -791,7 +791,7 @@ class _StudioHomeState extends State<StudioHome> {
                           : () => _stepThenReloadData('importing',
                               () => _pipeline.importExcel(_excelPath.text.trim())),
                       icon: const Icon(Icons.table_view, size: 18),
-                      label: const Text('Import Excel'),
+                      label: const Text('Import Excel / CSV'),
                     ),
                   ]),
                   const SizedBox(height: 8),
@@ -1115,6 +1115,18 @@ class _StudioHomeState extends State<StudioHome> {
                         await _step('eval-tools', () => _pipeline.evalToolCalls());
                         if (mounted) setState(() {});
                       }),
+            const SizedBox(width: 4),
+            _btn('Interview eval (GGUF)', Icons.forum_outlined,
+                busy
+                    ? null
+                    : () async {
+                        await _step(
+                            'interview-eval',
+                            () => _pipeline.evalInterview(
+                                endpoint:
+                                    'http://127.0.0.1:8099/v1/chat/completions'));
+                        if (mounted) setState(() {});
+                      }),
           ]),
           const SizedBox(height: 8),
           Align(
@@ -1132,6 +1144,8 @@ class _StudioHomeState extends State<StudioHome> {
           ),
           const SizedBox(height: 12),
           _evalPanel(),
+          const SizedBox(height: 12),
+          _interviewPanel(),
           const SizedBox(height: 8),
           const Text('"Eval tool-calls" scores name + JSON-args exact-match on '
               'held-out valid.jsonl (BFCL-style). Edit cases in '
@@ -1510,6 +1524,79 @@ class _StudioHomeState extends State<StudioHome> {
           row('function name', 'function_name_pct'),
           row('arg keys', 'arg_keys_pct'),
           row('args exact', 'args_exact_pct'),
+        ]),
+      ),
+    );
+  }
+
+  // ── End-to-end interview eval (served GGUF): coverage / once-only / TPS ──
+  Widget _interviewPanel() {
+    final r = _pipeline.lastInterviewResult();
+    if (r == null) return const SizedBox.shrink();
+    Widget metric(String label, Object? v, String suffix, Color c) => Expanded(
+          child: Column(children: [
+            Text(v == null ? '—' : '$v$suffix',
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: c)),
+            Text(label,
+                style: const TextStyle(fontSize: 11, color: Colors.white54)),
+          ]),
+        );
+    final cases = (r['cases'] as List?) ?? const [];
+    bool clean(Map c) =>
+        c['covered'] == true &&
+        c['finalized'] == true &&
+        ((c['repeats'] as List?)?.isEmpty ?? true);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Text('Interview eval — served GGUF',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Text('${r['scenarios']} interviews · ${r['model']}',
+                style: const TextStyle(fontSize: 11, color: Colors.white54)),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            metric('coverage', r['coverage_pct'], '%', Colors.greenAccent),
+            metric('once-only', r['once_only_pct'], '%', Colors.greenAccent),
+            metric('completes', r['completes_pct'], '%', Colors.greenAccent),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            metric('TPS', r['tps_mean'], '', Colors.lightBlueAccent),
+            metric('PP/s', r['pps_mean'], '', Colors.lightBlueAccent),
+            metric('avg asks', r['avg_asks'], '', Colors.white70),
+          ]),
+          const Divider(height: 18),
+          for (final c in cases.cast<Map>())
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(children: [
+                Icon(clean(c) ? Icons.check_circle : Icons.error_outline,
+                    size: 14,
+                    color:
+                        clean(c) ? Colors.greenAccent : Colors.orangeAccent),
+                const SizedBox(width: 6),
+                Expanded(
+                    child: Text('${c['idea']}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.white70))),
+                Text('${c['asks']} asks',
+                    style:
+                        const TextStyle(fontSize: 11, color: Colors.white38)),
+              ]),
+            ),
+          const SizedBox(height: 6),
+          const Text(
+              'Transcripts in workspace/interview_runs/ · cases in the '
+              'interview_cases seed. Endpoint: a served GGUF '
+              '(llama-server --jinja or lemonade).',
+              style: TextStyle(fontSize: 11, color: Colors.white38)),
         ]),
       ),
     );

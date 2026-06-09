@@ -1,16 +1,16 @@
 {
   "full_templates": [
     "I want to build {name}: an app that {blurb}. It runs on {plats}. It should {objs}. Key features: {feats}. Build it in {langs} with {fws}, {dbs} for storage, and {svcs}.",
-    "Let's spec {name} — it {blurb}. Target platforms: {plats}. Goals: {objs}. Features I want: {feats}. Stack: {langs}/{fws}, {dbs}, plus {svcs}.",
+    "Let's spec {name} \u2014 it {blurb}. Target platforms: {plats}. Goals: {objs}. Features I want: {feats}. Stack: {langs}/{fws}, {dbs}, plus {svcs}.",
     "{name} is an app that {blurb}, for {plats}. It needs to {objs} and include {feats}. Use {langs} with {fws} and {dbs}; integrate {svcs}."
   ],
   "sparse_templates": [
-    "I want to build {name} — an app that {blurb}.",
+    "I want to build {name} \u2014 an app that {blurb}.",
     "Let's set up {name}. It {blurb}.",
     "Help me plan {name}: it {blurb}."
   ],
   "obj_questions": [
-    "Objectives — anything else it should do?",
+    "Objectives \u2014 anything else it should do?",
     "What are the main goals beyond what you mentioned?",
     "Which of these should it handle?"
   ],
@@ -92,5 +92,15 @@
         "Web"
       ]
     ]
+  ],
+  "correction_templates": [
+    "Actually this isn't a {wrong} app \u2014 it's a {correct} app for {idea}. Please remove those tags.",
+    "No, it's not {wrong}. It's {correct} \u2014 {idea}. Drop those tags.",
+    "That's not right, this isn't {wrong}. We're {correct} ({idea}). Remove them please.",
+    "Hold on \u2014 not {wrong}. It's a {correct} app: {idea}. Take those off.",
+    "This is not a {wrong} app, it's a {correct} app for {idea}. Remove those tags.",
+    "Wrong industry \u2014 it isn't {wrong}. It's {correct}, {idea}. Please remove the {wrong} tag.",
+    "I think you mis-tagged it \u2014 it's not {wrong}, it's {correct} for {idea}. Remove those.",
+    "Not {wrong} at all. {correct} is the right one \u2014 {idea}. Drop the wrong tags."
   ]
 }

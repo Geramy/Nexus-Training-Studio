@@ -227,6 +227,31 @@ class Pipeline {
     }
   }
 
+  /// END-TO-END interview eval against a SERVED GGUF endpoint (OpenAI-compatible —
+  /// llama-server --jinja or lemonade). Simulates full setup interviews and scores
+  /// COVERAGE (every required topic tagged), ONCE-ONLY (no topic re-asked), and
+  /// COMPLETION, plus records TPS / PP-s from the server timings. Writes
+  /// workspace/interview_result.json and per-run transcripts under
+  /// workspace/interview_runs. Test cases live in the editable interview_cases seed.
+  Future<int> evalInterview(
+          {required String endpoint, String model = 'gguf', int scenarios = 8}) =>
+      _run(_python, [
+        'py/eval_interview.py', '--endpoint', endpoint,
+        '--model', model, '--scenarios', '$scenarios',
+      ], 'Interview eval ($model)');
+
+  /// The last interview eval's metrics for the UI panel (null if none yet).
+  Map<String, dynamic>? lastInterviewResult() {
+    final f = File('$studioRoot/workspace/interview_result.json');
+    if (!f.existsSync()) return null;
+    try {
+      final d = jsonDecode(f.readAsStringSync());
+      return d is Map<String, dynamic> ? d : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Run the fine-tuned model against the use/test cases in workspace/tests and
   /// report pass/fail per case. [model] defaults to the fused fine-tune.
   Future<int> runTests({String? model}) => _run(

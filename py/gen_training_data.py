@@ -40,6 +40,8 @@ STYLE_PREFIX = _PH["style_prefix"]
 STYLE_SUFFIX = _PH["style_suffix"]
 AMBIGUOUS_IDEAS = _PH["ambiguous_ideas"]
 VAGUE_OPENERS = _PH["vague_openers"]
+CORRECTION_TEMPLATES = _PH["correction_templates"]
+_PROMPTS = load_seed("prompts")          # setup/discovery/pm system prompts
 
 
 # ───────────────────────── message + tool-call helpers ─────────────────────
@@ -62,8 +64,41 @@ def user_msg(t):
     return {"role": "user", "content": t}
 
 
-def asst_text(t):
-    return {"role": "assistant", "content": t}
+# Short, tool-aware THINKING the assistant emits before it acts. The Nemotron
+# chat template renders `reasoning_content` as `<think>…</think>` before the
+# content/tool call, so seeding every assistant turn with a brief, closed thought
+# teaches the model to think-then-act AND to close the tag (preventing the leaked,
+# never-closed `<think>` the model was doing). History thinking is auto-truncated
+# by the template, so only the latest turn's thought is kept at serve time.
+_REASON = {
+    "propose_tags": "Mapping what they told me to the right tags before I move on.",
+    "remove_tags": "They said those are wrong — I'll remove exactly the tags they rejected, nothing else.",
+    "ask_question": "That topic is still open, so I'll ask it with concrete options.",
+    "finalize_setup": "Every required topic has at least one tag now, so I can finalize.",
+    "scope_options": "Before finalizing I should scope the libraries and verify them.",
+    "lookup_package": "Let me check each package is still maintained before adding it.",
+    "dismiss_item": "These came back stale, so I'll drop them.",
+    "consider_items": "Worth weighing these options before I decide.",
+    "generate_image": "They want to see it, so I'll generate a mockup.",
+    "edit_image": "Applying the change they asked for to the latest image.",
+    "create_task": "Turning this into a concrete, stack-specific task.",
+    "assign_agent_to_task": "Assigning it to the agent that fits.",
+    "update_task": "Updating the task with their change.",
+    "update_task_status": "Moving the task to its new status.",
+    "add_user_story": "Capturing this as a user story in the tree.",
+    "update_user_story": "Refining that story with the new detail.",
+    "draft_stories_from_text": "Big chunk — I'll split it into clean stories.",
+}
+
+
+def _reason_for(calls):
+    name = calls[0]["function"]["name"] if calls else None
+    return _REASON.get(name, "I'll call the tool to act on what they said.")
+
+
+def asst_text(t, reasoning=None):
+    return {"role": "assistant", "content": t,
+            "reasoning_content": reasoning or "Wrapping up in one short sentence."}
 
 
 def tool_call(ids, name, args):
@@ -72,9 +107,10 @@ def tool_call(ids, name, args):
                  "function": {"name": name, "arguments": json.dumps(args)}}
 
 
-def asst_calls(calls, content=None):
+def asst_calls(calls, content=None, reasoning=None):
     return {"role": "assistant", "content": content if content else None,
-            "tool_calls": calls}
+            "tool_calls": calls,
+            "reasoning_content": reasoning or _reason_for(calls)}
 
 
 def tool_result(cid, obj, name=None):
@@ -145,54 +181,23 @@ def umsg(R, text):
 
 # ───────────────────────── system prompts ──────────────────────────────────
 
+# System prompts are EDITABLE JSON (workspace/seeds/prompts.json, example at
+# seeds/prompts.example.json), not hardcoded here — same data-driven pattern as the
+# other seeds, and the single source so train == eval == serve. Keep in sync with
+# the app's served setup/coordinator prompts.
 def interview_system(p):
-    topics = ("1. Industry — the domain [category: `industries`]\n"
-              "2. Platforms — surfaces it runs on [category: `platforms`]\n"
-              "3. Objectives — what it should do [category: `objectives`]\n"
-              "4. Features — concrete features [category: `features`]\n"
-              "5. Stack — languages/frameworks/databases/services "
-              "[`languages`,`frameworks`,`databases`,`services`]")
-    return f"""You are the Setup host for "{p['name']}" (Software Project). Your job is to build the project profile by TAGGING it. Keep every reply to 1-2 short sentences.
-
-You have topics to fill (below). Tag what the user already told you FIRST, then ask about whatever is still open — one at a time, in flexible order.
-
-{topics}
-START FROM WHAT THEY SAID:
-- Read the user's description and FIRST call `propose_tags` for everything it already implies.
-- Then reflect back in one short sentence what you recorded.
-
-HOW TO ASK (for the topics still open):
-- Each remaining question goes through `ask_question` — it shows options as buttons the user taps.
-
-RULES:
-- Each tag VALUE is a SHORT label (≤5 words), one idea per tag; give several items as several tags.
-- Once platforms are known, also propose at least one `languages` and one `frameworks` value yourself.
-- When every required section has at least one tag, call `finalize_setup` (it refuses and lists what's missing if called too early)."""
+    return _PROMPTS["setup_system"].format(name=p["name"])
 
 
 def discovery_system(p):
-    return f"""You are the project Coordinator running the post-setup DISCOVERY interview for "{p['name']}". Setup is done and NO tasks exist yet. Capture the FULL idea as a well-structured USER-STORY TREE before any work begins.
-
-KEEP ASKING UNTIL COMPLETE
-- Treat each answer as a starting point; keep interviewing until the whole flow is covered and the user says they're done.
-- End every turn with exactly ONE focused question.
-
-CAPTURE AS YOU GO
-- Capture each distinct piece via `add_user_story` — a clear title and "As a <role>, I want <goal>, so that <benefit>", with acceptance_criteria when known.
-- For a big chunk describing several things, call `draft_stories_from_text` with the raw words.
-
-BUILD A REAL TREE
-- One root epic; everything hangs under something meaningful.
-- CHAIN flow steps: each step's `parent_story_id` is the step it follows from.
-- `add_user_story` returns the new id — reuse it as the parent for its children."""
+    return _PROMPTS["discovery_system"].format(name=p["name"])
 
 
 def pm_system(p):
-    return f"""You are the Project Manager for "{p['name']}". You plan work and create/manage tasks for an autonomous software team. Decompose the plans and user stories into well-scoped tasks and assign each to the right agent.
-
-Write each task as a concrete, stack-specific instruction using the chosen stack ({", ".join(p['languages'])} / {", ".join(p['frameworks'])}), with a clear objective, acceptance criteria, and a runnable verification command. Keep objectives as tiny imperative phrases (e.g. "Write {p['languages'][0]} login form", "Create users table in {p['databases'][0]}").
-
-When the user asks to add work or break down plans — CALL THE TOOLS immediately (create_task, then assign_agent_to_task), then confirm what you changed in one short sentence."""
+    return _PROMPTS["pm_system"].format(
+        name=p["name"],
+        langs=", ".join(p["languages"]), fws=", ".join(p["frameworks"]),
+        lang0=p["languages"][0], db0=p["databases"][0])
 
 
 # ───────────────────────── scenario synthesis ──────────────────────────────
@@ -273,6 +278,17 @@ def _plans_result():
 def _fmt_list(xs):
     xs = [x.lower() for x in xs]
     return ", ".join(xs)
+
+
+def _human_or(xs):
+    """Join labels the way a person rejects them: "logistics" / "logistics or
+    ecommerce" / "logistics, ecommerce, or retail" (lowercased)."""
+    xs = [x.lower() for x in xs]
+    if len(xs) == 1:
+        return xs[0]
+    if len(xs) == 2:
+        return f"{xs[0]} or {xs[1]}"
+    return ", ".join(xs[:-1]) + f", or {xs[-1]}"
 
 
 # ───────────────────────── conversation builders ───────────────────────────
@@ -657,6 +673,65 @@ def build_setup_recovery(p, R):
     return {"messages": msgs}
 
 
+def build_setup_correction(p, R):
+    """The user REJECTS an industry tag the host guessed ("this is not a logistics
+    or ecommerce app — it's Food & Beverage, remove those") → the host calls
+    `remove_tags` for EXACTLY the disowned values, keeps the right one, and moves on.
+
+    Teaches two things at once:
+      • remove_tags is called ONLY when the user explicitly disowns a tag (every
+        other builder keeps its tags, so the contrast makes "don't remove unless
+        told" the default), and
+      • it works for ANY industry — the wrong value is drawn from the taxonomy DB,
+        so over the corpus we loop "this is not a {db industry}" across all values.
+    """
+    ids = Ids()
+    correct = p["industries"][0]
+    # 1-2 WRONG industries from the taxonomy DB (never the correct one) that the
+    # host over-eagerly guessed alongside the right one.
+    pool = [k for k in INDUSTRIES if k != correct]
+    wrongs = R.sample(pool, R.randint(1, 2))
+    guess = ([{"category": "industries", "value": v} for v in [correct] + wrongs]
+             + [{"category": "platforms", "value": v} for v in p["platforms"]])
+
+    opener = R.choice(opener_for(p["idea"])).format(idea=p["idea"])
+    msgs = [sys_msg(interview_system(p)), user_msg(evolve_user(R, opener))]
+    cid, call = tool_call(ids, "propose_tags", {"tags": guess})
+    msgs.append(asst_calls([call], content=(
+        f"Tagging it as {_human_or([correct] + wrongs)} to start.")))
+    msgs.append(tool_result(cid, {"ok": True, "added": len(guess)}, "propose_tags"))
+
+    # The user corrects, naming the wrong industries AND the right one.
+    msgs.append(user_msg(R.choice(CORRECTION_TEMPLATES).format(
+        wrong=_human_or(wrongs), correct=correct.lower(), idea=p["idea"])))
+
+    # The host removes EXACTLY the disowned tags — nothing else.
+    cid, call = tool_call(ids, "remove_tags", {
+        "tags": [{"category": "industries", "value": v} for v in wrongs]})
+    msgs.append(asst_calls([call], content=(
+        f"Got it — removing {_human_or(wrongs)} and keeping {correct.lower()}.")))
+    msgs.append(tool_result(cid, {"ok": True, "removed": len(wrongs)}, "remove_tags"))
+
+    # Continue the interview from the corrected state.
+    cid, call = tool_call(ids, "ask_question", {
+        "question": R.choice(OBJ_QUESTIONS), "options": p["objectives"],
+        "multi": True})
+    msgs.append(asst_calls([call]))
+    msgs.append(tool_result(cid, {"answer": p["objectives"]}, "ask_question"))
+    cid, call = tool_call(ids, "propose_tags", {
+        "tags": [{"category": "objectives", "value": v} for v in p["objectives"]]
+                + [{"category": "features", "value": v} for v in p["features"]]
+                + _stack_tags(p)})
+    msgs.append(asst_calls([call]))
+    msgs.append(tool_result(cid, {"ok": True}, "propose_tags"))
+    _libraries_phase(ids, p, R, msgs)
+    cid, call = tool_call(ids, "finalize_setup", {})
+    msgs.append(asst_calls([call], content="Corrected and complete — finalizing."))
+    msgs.append(tool_result(cid, _plans_result(), "finalize_setup"))
+    msgs.append(asst_text("Setup complete — plans generated. Ready for discovery."))
+    return {"messages": msgs}
+
+
 def build_setup_image(p, R):
     """User asks to see a mockup → generate_image, then continues setup."""
     ids = Ids()
@@ -869,7 +944,8 @@ def build_tasks_status(p, R):
 
 SETUP_VARIANTS = [build_setup_full, build_setup_partial, build_setup_recovery,
                   build_setup_image, build_setup_infer, build_setup_vague,
-                  build_setup_ambiguous, build_setup_libraries]
+                  build_setup_ambiguous, build_setup_libraries,
+                  build_setup_correction]
 TASK_VARIANTS = [build_tasks, build_tasks_breakdown, build_tasks_status]
 
 
@@ -888,6 +964,11 @@ def generate(target, kinds, seed):
             for _ in range(2):
                 convos.append({**build_setup_ambiguous(p, R),
                                "tools": tools_for("setup")})
+            # Weight the tag-correction case up too, so "user says it's NOT a
+            # {industry} → remove_tags" is well-learned across every DB value (each
+            # call draws fresh wrong industries from the taxonomy).
+            convos.append({**build_setup_correction(p, R),
+                           "tools": tools_for("setup")})
         if "discovery" in kinds:
             # two discovery variants (draft vs manual chosen inside)
             for _ in range(2):

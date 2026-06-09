@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "idea": "I want to make an app for my lemonade stand.",
+      "note": "ambiguous tiny biz \u2192 infer Food & Beverage, ask app type"
+    },
+    {
+      "idea": "I'd like to build an app so customers can find my food truck and order ahead.",
+      "note": "customer-facing; Ordering + Store locator"
+    },
+    {
+      "idea": "We need an internal tool for our dental clinic to manage appointments.",
+      "note": "internal/staff tool, not customer-facing"
+    },
+    {
+      "idea": "I want a marketplace app connecting dog walkers with owners.",
+      "note": "two-sided marketplace"
+    },
+    {
+      "idea": "Build me a fitness app that tracks workouts and shows progress.",
+      "note": "tracker"
+    },
+    {
+      "idea": "I'm making a booking app for a hair salon.",
+      "note": "booking/scheduling"
+    },
+    {
+      "idea": "An app for a bookstore to sell online and manage inventory.",
+      "note": "storefront + inventory"
+    },
+    {
+      "idea": "A delivery app for a pizza place with live order tracking.",
+      "note": "delivery + realtime tracking"
+    },
+    {
+      "idea": "I want an app for my gym members to reserve classes.",
+      "note": "reservations"
+    },
+    {
+      "idea": "A photography studio app for clients to view and buy photo galleries.",
+      "note": "client portal + payments"
+    }
+  ]
+}
