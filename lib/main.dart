@@ -71,6 +71,9 @@ class _StudioHomeState extends State<StudioHome> {
   final _excelPath = TextEditingController();
   final _hfDataset = TextEditingController();
   final _hfSplit = TextEditingController(text: 'train');
+  // Served-GGUF endpoint for the end-to-end interview A/B (original vs trained).
+  final _intEndpoint =
+      TextEditingController(text: 'http://127.0.0.1:8099/v1/chat/completions');
   List<Map<String, dynamic>> _dataRows = [];
   int _dataTotal = 0;
   String _dataFilter = 'all';
@@ -1115,18 +1118,6 @@ class _StudioHomeState extends State<StudioHome> {
                         await _step('eval-tools', () => _pipeline.evalToolCalls());
                         if (mounted) setState(() {});
                       }),
-            const SizedBox(width: 4),
-            _btn('Interview eval (GGUF)', Icons.forum_outlined,
-                busy
-                    ? null
-                    : () async {
-                        await _step(
-                            'interview-eval',
-                            () => _pipeline.evalInterview(
-                                endpoint:
-                                    'http://127.0.0.1:8099/v1/chat/completions'));
-                        if (mounted) setState(() {});
-                      }),
           ]),
           const SizedBox(height: 8),
           Align(
@@ -1144,7 +1135,55 @@ class _StudioHomeState extends State<StudioHome> {
           ),
           const SizedBox(height: 12),
           _evalPanel(),
-          const SizedBox(height: 12),
+          const Divider(height: 28),
+          const Text('End-to-end interview A/B — original vs trained (served GGUF)',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _intEndpoint,
+                style: const TextStyle(fontSize: 13),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  labelText: 'Served-GGUF endpoint (llama-server --jinja / lemonade)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            _btn('Run as original', Icons.play_circle_outline,
+                busy
+                    ? null
+                    : () async {
+                        await _step(
+                            'interview-base',
+                            () => _pipeline.evalInterview(
+                                endpoint: _intEndpoint.text.trim(),
+                                label: 'base'));
+                        if (mounted) setState(() {});
+                      }),
+            const SizedBox(width: 4),
+            _btn('Run as trained', Icons.play_circle_fill_outlined,
+                busy
+                    ? null
+                    : () async {
+                        await _step(
+                            'interview-trained',
+                            () => _pipeline.evalInterview(
+                                endpoint: _intEndpoint.text.trim(),
+                                label: 'trained'));
+                        if (mounted) setState(() {});
+                      }),
+          ]),
+          const SizedBox(height: 6),
+          const Text(
+              'Serve the ORIGINAL model and "Run as original"; serve the TRAINED '
+              'model (same or a different port) and "Run as trained" — the panel '
+              'compares both, with TPS / PP-s per side. Cases in the interview_cases '
+              'seed; transcripts in workspace/interview_runs/.',
+              style: TextStyle(fontSize: 11, color: Colors.white54)),
+          const SizedBox(height: 10),
           _interviewPanel(),
           const SizedBox(height: 8),
           const Text('"Eval tool-calls" scores name + JSON-args exact-match on '
@@ -1533,70 +1572,61 @@ class _StudioHomeState extends State<StudioHome> {
   Widget _interviewPanel() {
     final r = _pipeline.lastInterviewResult();
     if (r == null) return const SizedBox.shrink();
-    Widget metric(String label, Object? v, String suffix, Color c) => Expanded(
-          child: Column(children: [
-            Text(v == null ? '—' : '$v$suffix',
-                style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold, color: c)),
-            Text(label,
-                style: const TextStyle(fontSize: 11, color: Colors.white54)),
+    // Keyed by base/trained; tolerate an old flat result as the trained column.
+    final base = r['base'] as Map?;
+    final trained =
+        (r['trained'] as Map?) ?? (r.containsKey('coverage_pct') ? r : null);
+    if (base == null && trained == null) return const SizedBox.shrink();
+    final any = trained ?? base!;
+
+    Widget head(String s, Color c) => Expanded(
+        child: Text(s,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: c)));
+    Widget val(Map? m, String key, String suffix, Color c) => Expanded(
+          child: Text(m == null || m[key] == null ? '—' : '${m[key]}$suffix',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: m == null || m[key] == null ? Colors.white38 : c)),
+        );
+    Widget row(String label, String key, String suffix) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(children: [
+            Expanded(
+                flex: 2,
+                child: Text(label,
+                    style:
+                        const TextStyle(fontSize: 13, color: Colors.white70))),
+            val(base, key, suffix, Colors.white),
+            val(trained, key, suffix, Colors.greenAccent),
           ]),
         );
-    final cases = (r['cases'] as List?) ?? const [];
-    bool clean(Map c) =>
-        c['covered'] == true &&
-        c['finalized'] == true &&
-        ((c['repeats'] as List?)?.isEmpty ?? true);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            const Text('Interview eval — served GGUF',
+            const Text('Interview eval — original vs trained',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const Spacer(),
-            Text('${r['scenarios']} interviews · ${r['model']}',
+            Text('${any['scenarios']} interviews',
                 style: const TextStyle(fontSize: 11, color: Colors.white54)),
           ]),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(children: [
-            metric('coverage', r['coverage_pct'], '%', Colors.greenAccent),
-            metric('once-only', r['once_only_pct'], '%', Colors.greenAccent),
-            metric('completes', r['completes_pct'], '%', Colors.greenAccent),
+            const Expanded(flex: 2, child: SizedBox()),
+            head('Original', Colors.white54),
+            head('Trained', Colors.greenAccent),
           ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            metric('TPS', r['tps_mean'], '', Colors.lightBlueAccent),
-            metric('PP/s', r['pps_mean'], '', Colors.lightBlueAccent),
-            metric('avg asks', r['avg_asks'], '', Colors.white70),
-          ]),
-          const Divider(height: 18),
-          for (final c in cases.cast<Map>())
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(children: [
-                Icon(clean(c) ? Icons.check_circle : Icons.error_outline,
-                    size: 14,
-                    color:
-                        clean(c) ? Colors.greenAccent : Colors.orangeAccent),
-                const SizedBox(width: 6),
-                Expanded(
-                    child: Text('${c['idea']}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.white70))),
-                Text('${c['asks']} asks',
-                    style:
-                        const TextStyle(fontSize: 11, color: Colors.white38)),
-              ]),
-            ),
-          const SizedBox(height: 6),
-          const Text(
-              'Transcripts in workspace/interview_runs/ · cases in the '
-              'interview_cases seed. Endpoint: a served GGUF '
-              '(llama-server --jinja or lemonade).',
-              style: TextStyle(fontSize: 11, color: Colors.white38)),
+          const Divider(height: 12),
+          row('coverage', 'coverage_pct', '%'),
+          row('once-only', 'once_only_pct', '%'),
+          row('completes', 'completes_pct', '%'),
+          row('avg asks', 'avg_asks', ''),
+          row('TPS (gen)', 'tps_mean', ''),
+          row('PP/s (prompt)', 'pps_mean', ''),
         ]),
       ),
     );

@@ -191,6 +191,8 @@ def main():
     ap.add_argument("--model", default="gguf")
     ap.add_argument("--scenarios", type=int, default=8)
     ap.add_argument("--max-turns", type=int, default=16)
+    ap.add_argument("--label", default="trained",
+                    help="which side of the A/B this run is: 'base' or 'trained'")
     args = ap.parse_args()
 
     tools = json.loads((SEEDS / "tool_schemas.json").read_text())["setup"]
@@ -237,9 +239,9 @@ def main():
         print(f"  PP/s (prompt tok/s): mean {statistics.mean(all_pps):.1f}  "
               f"min {min(all_pps):.1f}  max {max(all_pps):.1f}")
 
-    # Persist a compact result the studio GUI reads (mirrors eval_result.json).
-    Path("workspace").mkdir(exist_ok=True)
-    Path("workspace/interview_result.json").write_text(json.dumps({
+    # Persist keyed by A/B label (base|trained) so both sides coexist for a
+    # side-by-side comparison, mirroring eval_result.json.
+    res = {
         "model": args.model, "endpoint": args.endpoint, "scenarios": n,
         "coverage_pct": round(100 * cov / n, 1),
         "once_only_pct": round(100 * once / n, 1),
@@ -253,8 +255,20 @@ def main():
         "cases": [{"idea": r["idea"], "finalized": r["finalized"],
                    "covered": not r["missing"], "repeats": r["repeats"],
                    "asks": len(r["asked"]), "turns": r["turns"]} for r in runs],
-    }, indent=2))
-    print("· wrote workspace/interview_result.json")
+    }
+    out = Path("workspace/interview_result.json")
+    out.parent.mkdir(exist_ok=True)
+    data = {}
+    if out.exists():
+        try:
+            data = json.loads(out.read_text())
+        except Exception:  # noqa: BLE001
+            data = {}
+    if "coverage_pct" in data:  # migrate an old flat result → keyed
+        data = {"trained": data}
+    data[args.label] = res
+    out.write_text(json.dumps(data, indent=2))
+    print(f"· wrote workspace/interview_result.json [{args.label}]")
     return 0
 
 

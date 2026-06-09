@@ -256,6 +256,7 @@ class StudioServer {
                         'http://127.0.0.1:8099/v1/chat/completions')
                     .toString(),
                 model: (obj['model'] ?? 'gguf').toString(),
+                label: (obj['label'] ?? 'trained').toString(),
                 scenarios: int.tryParse('${obj['scenarios'] ?? 8}') ?? 8);
             break;
           case 'export':
