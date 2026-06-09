@@ -230,26 +230,8 @@ def main():
                 "pps": round(pps, 1) if pps else None,
                 "transcript": f"workspace/interview_runs/{args.model}-{i + 1:02d}.md"}
 
-    ran = {}
-    for i in idxs:
-        idea = all_cases[i]["idea"]
-        r = simulate(args.endpoint, args.model, system_t.format(name=f"App{i + 1}"),
-                     tools, idea, args.max_turns)
-        if "error" in r:
-            print(f"  case {i + 1}: ERROR {r['error']}"); continue
-        write_transcript(out_dir, args.model, i + 1, r)
-        cr = case_result(i, r)
-        ran[i] = cr
-        flag = "OK " if (cr["covered"] and not cr["repeats"] and cr["finalized"]) \
-            else "!! "
-        print(f"  {flag}#{i + 1} {idea[:38]!r:40} cov={cr['covered']} "
-              f"once={not cr['repeats']} fin={cr['finalized']} "
-              f"tps={cr['tps']} pps={cr['pps']}")
-    if not ran:
-        print("no successful runs"); return 1
-
-    # Merge into the keyed result, keeping a per-seed-index `cases` list so a single
-    # --case updates just its slot (clean per-case numbers) and the rest persist.
+    # Load the keyed result once, keep a per-seed-index `cases` list, and re-write
+    # it AFTER EVERY CASE so the studio UI updates live as the run progresses.
     out = Path("workspace/interview_result.json")
     out.parent.mkdir(exist_ok=True)
     data = {}
@@ -263,26 +245,49 @@ def main():
     cases = (data.get(args.label, {}).get("cases") or [])
     while len(cases) < len(all_cases):
         cases.append(None)
-    for i, cr in ran.items():
-        cases[i] = cr
 
-    done = [c for c in cases if c]
-    n = len(done)
-    tpsv = [c["tps"] for c in done if c.get("tps")]
-    ppsv = [c["pps"] for c in done if c.get("pps")]
-    data[args.label] = {
-        "model": args.model, "endpoint": args.endpoint, "scenarios": n,
-        "coverage_pct": round(100 * sum(1 for c in done if c["covered"]) / n, 1),
-        "once_only_pct": round(100 * sum(1 for c in done if not c["repeats"]) / n, 1),
-        "completes_pct": round(100 * sum(1 for c in done if c["finalized"]) / n, 1),
-        "avg_asks": round(statistics.mean(c["asks"] for c in done), 2),
-        "tps_mean": round(statistics.mean(tpsv), 1) if tpsv else None,
-        "pps_mean": round(statistics.mean(ppsv), 1) if ppsv else None,
-        "cases": cases,
-    }
-    out.write_text(json.dumps(data, indent=2))
-    print(f"· wrote interview_result.json [{args.label}] "
-          f"({len(ran)} this run, {n} total) — transcripts in {out_dir}/")
+    def flush(running: bool):
+        done = [c for c in cases if c]
+        if not done:
+            return
+        tpsv = [c["tps"] for c in done if c.get("tps")]
+        ppsv = [c["pps"] for c in done if c.get("pps")]
+        data[args.label] = {
+            "model": args.model, "endpoint": args.endpoint, "scenarios": len(done),
+            "running": running, "total": len(idxs),
+            "coverage_pct": round(100 * sum(1 for c in done if c["covered"]) / len(done), 1),
+            "once_only_pct": round(100 * sum(1 for c in done if not c["repeats"]) / len(done), 1),
+            "completes_pct": round(100 * sum(1 for c in done if c["finalized"]) / len(done), 1),
+            "avg_asks": round(statistics.mean(c["asks"] for c in done), 2),
+            "tps_mean": round(statistics.mean(tpsv), 1) if tpsv else None,
+            "pps_mean": round(statistics.mean(ppsv), 1) if ppsv else None,
+            "cases": cases,
+        }
+        out.write_text(json.dumps(data, indent=2))
+
+    ran = 0
+    for n_idx, i in enumerate(idxs):
+        idea = all_cases[i]["idea"]
+        r = simulate(args.endpoint, args.model, system_t.format(name=f"App{i + 1}"),
+                     tools, idea, args.max_turns)
+        if "error" in r:
+            print(f"  case {i + 1}: ERROR {r['error']}"); continue
+        write_transcript(out_dir, args.model, i + 1, r)
+        cases[i] = case_result(i, r)
+        ran += 1
+        cr = cases[i]
+        flag = "OK " if (cr["covered"] and not cr["repeats"] and cr["finalized"]) \
+            else "!! "
+        print(f"  {flag}#{i + 1} {idea[:38]!r:40} cov={cr['covered']} "
+              f"once={not cr['repeats']} fin={cr['finalized']} "
+              f"tps={cr['tps']} pps={cr['pps']}")
+        flush(running=(n_idx < len(idxs) - 1))  # persist after EACH case
+
+    if ran == 0:
+        print("no successful runs"); return 1
+    flush(running=False)
+    print(f"· {ran} case(s) this run — interview_result.json updated per case, "
+          f"transcripts in {out_dir}/")
     return 0
 
 

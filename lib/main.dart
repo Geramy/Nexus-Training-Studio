@@ -1673,14 +1673,25 @@ class _StudioHomeState extends State<StudioHome> {
       _btn('Run all', Icons.forum_outlined,
           (busy || !running)
               ? null
-              : () async {
-                  await _step(
-                      'interview-$label',
-                      () => _pipeline.evalInterview(
-                          endpoint: _pipeline.endpointFor(label), label: label));
-                  if (mounted) setState(() {});
-                }),
+              : () => _runInterview(
+                  'interview-$label',
+                  () => _pipeline.evalInterview(
+                      endpoint: _pipeline.endpointFor(label), label: label))),
     ]);
+  }
+
+  // Run an interview eval while POLLING the result file so the panel + per-case
+  // rows (percentages, TPS/PP) update live as each case finishes — the eval
+  // re-writes interview_result.json after every case.
+  Future<void> _runInterview(String stepName, Future<int> Function() fn) async {
+    final t = Timer.periodic(const Duration(seconds: 2),
+        (_) => mounted ? setState(() {}) : null);
+    try {
+      await _step(stepName, fn);
+    } finally {
+      t.cancel();
+      if (mounted) setState(() {});
+    }
   }
 
   // The editable interview test-case ideas (from the seed) for per-case runs.
@@ -1735,15 +1746,12 @@ class _StudioHomeState extends State<StudioHome> {
           tooltip: 'Run case ${idx + 1} on $label',
           onPressed: (busy || !up)
               ? null
-              : () async {
-                  await _step(
-                      'interview-$label-#${idx + 1}',
-                      () => _pipeline.evalInterview(
-                          endpoint: _pipeline.endpointFor(label),
-                          label: label,
-                          caseIndex: idx + 1));
-                  if (mounted) setState(() {});
-                },
+              : () => _runInterview(
+                  'interview-$label-#${idx + 1}',
+                  () => _pipeline.evalInterview(
+                      endpoint: _pipeline.endpointFor(label),
+                      label: label,
+                      caseIndex: idx + 1)),
           icon: const Icon(Icons.play_arrow),
         ),
       ]);
@@ -1844,13 +1852,24 @@ class _StudioHomeState extends State<StudioHome> {
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Text('Interview eval — original vs trained',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            const Spacer(),
-            Text('${any['scenarios']} interviews',
-                style: const TextStyle(fontSize: 11, color: Colors.white54)),
-          ]),
+          Builder(builder: (_) {
+            final isRunning =
+                base?['running'] == true || trained?['running'] == true;
+            return Row(children: [
+              const Text('Interview eval — original vs trained',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text(
+                  isRunning
+                      ? 'running ${any['scenarios']}/${any['total'] ?? '?'}…'
+                      : '${any['scenarios']} interviews',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: isRunning
+                          ? Colors.amberAccent
+                          : Colors.white54)),
+            ]);
+          }),
           const SizedBox(height: 8),
           Row(children: [
             const Expanded(flex: 2, child: SizedBox()),
