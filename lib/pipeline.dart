@@ -266,6 +266,25 @@ class Pipeline {
   String endpointFor(String label) =>
       'http://127.0.0.1:${serverPort(label)}/v1/chat/completions';
 
+  /// Kill whatever is LISTENing on [port] (e.g. an orphaned server from a prior
+  /// app run) so a fresh start can bind. Best-effort; no-op if nothing's there.
+  Future<void> _freePort(int port) async {
+    try {
+      final r = await Process.run('lsof', ['-ti', 'tcp:$port', '-sTCP:LISTEN']);
+      final pids = (r.stdout as String)
+          .split('\n')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      if (pids.isEmpty) return;
+      for (final pid in pids) {
+        await Process.run('kill', ['-9', pid]);
+        onLog('• freed port $port (cleared stale server pid $pid).');
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+    } catch (_) {/* lsof/kill unavailable — let the bind error surface */}
+  }
+
   /// Start a llama-server serving [gguf] on the port for [label] (base|trained),
   /// with tool-calling (--jinja) and the recommended serving setup (thinking-on
   /// via the template; the eval sets temperature per request). Streams the
@@ -293,6 +312,9 @@ class Pipeline {
       '-c', '$contextSize', '-ngl', '999',
     ];
     onLog('\n▶ start $label model (:$port)\n  \$ $bin ${args.join(' ')}');
+    // Self-heal: a previous app instance can leave an orphaned server holding
+    // this port (a hard quit skips dispose()). Free it before we bind.
+    await _freePort(port);
     try {
       final p = await Process.start(bin, args,
           workingDirectory: studioRoot, environment: _env, runInShell: false);
