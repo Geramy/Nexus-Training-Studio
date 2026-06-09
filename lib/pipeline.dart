@@ -253,6 +253,80 @@ class Pipeline {
     }
   }
 
+  // ── Served-GGUF model servers for the interview A/B ───────────────────────
+  // Long-running llama-server processes the studio starts/stops so the user can
+  // serve the ORIGINAL ('base') and TRAINED ('trained') GGUFs and compare them.
+  // Kept OUT of the single-step `_current` lane so a server never blocks pipeline
+  // steps and two servers can run at once (base + trained on different ports).
+  final Map<String, Process> _servers = {};
+
+  bool serverRunning(String label) => _servers.containsKey(label);
+  int serverPort(String label) => label == 'base' ? 8098 : 8099;
+  String endpointFor(String label) =>
+      'http://127.0.0.1:${serverPort(label)}/v1/chat/completions';
+
+  /// Start a llama-server serving [gguf] on the port for [label] (base|trained),
+  /// with tool-calling (--jinja) and the recommended serving setup (thinking-on
+  /// via the template; the eval sets temperature per request). Streams the
+  /// server's log into the studio log so you can watch the model load.
+  Future<bool> startServer(
+      {required String label, required String gguf, int contextSize = 16384}) async {
+    if (_servers.containsKey(label)) {
+      onLog('⚠ $label model server already running on :${serverPort(label)}.');
+      return true;
+    }
+    if (!File(gguf).existsSync()) {
+      onLog('✗ $label model not found: $gguf');
+      return false;
+    }
+    final bin = File('$llamaCppDir/build/bin/llama-server').existsSync()
+        ? '$llamaCppDir/build/bin/llama-server'
+        : '$llamaCppDir/llama-server';
+    final port = serverPort(label);
+    final args = [
+      '-m', gguf, '--jinja', '--host', '127.0.0.1', '--port', '$port',
+      '-c', '$contextSize', '-ngl', '999',
+    ];
+    onLog('\n▶ start $label model (:$port)\n  \$ $bin ${args.join(' ')}');
+    try {
+      final p = await Process.start(bin, args,
+          workingDirectory: studioRoot, environment: _env, runInShell: false);
+      _servers[label] = p;
+      void pipe(Stream<List<int>> s) => s
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen((l) => onLog('[$label] $l'));
+      pipe(p.stdout);
+      pipe(p.stderr);
+      p.exitCode.then((c) {
+        _servers.remove(label);
+        onLog('• $label server exited ($c)');
+      });
+      onLog('✓ $label server starting on :$port — wait for "model loaded".');
+      return true;
+    } catch (e) {
+      onLog('✗ $label server failed to start: $e');
+      return false;
+    }
+  }
+
+  void stopServer(String label) {
+    final p = _servers.remove(label);
+    if (p == null) {
+      onLog('• no $label server running.');
+      return;
+    }
+    p.kill(ProcessSignal.sigterm);
+    onLog('• stopped $label server (:${serverPort(label)}).');
+  }
+
+  void stopAllServers() {
+    for (final e in _servers.entries) {
+      e.value.kill(ProcessSignal.sigterm);
+    }
+    _servers.clear();
+  }
+
   /// Run the fine-tuned model against the use/test cases in workspace/tests and
   /// report pass/fail per case. [model] defaults to the fused fine-tune.
   Future<int> runTests({String? model}) => _run(

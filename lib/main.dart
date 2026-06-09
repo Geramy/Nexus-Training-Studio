@@ -71,9 +71,11 @@ class _StudioHomeState extends State<StudioHome> {
   final _excelPath = TextEditingController();
   final _hfDataset = TextEditingController();
   final _hfSplit = TextEditingController(text: 'train');
-  // Served-GGUF endpoint for the end-to-end interview A/B (original vs trained).
-  final _intEndpoint =
-      TextEditingController(text: 'http://127.0.0.1:8099/v1/chat/completions');
+  // GGUF paths for the interview A/B — the studio serves each via llama-server
+  // (original on :8098, trained on :8099) so the two can be compared.
+  final _baseGguf = TextEditingController();
+  final _trainedGguf =
+      TextEditingController(text: 'workspace/gguf/model-Q4_K_M.gguf');
   List<Map<String, dynamic>> _dataRows = [];
   int _dataTotal = 0;
   String _dataFilter = 'all';
@@ -385,6 +387,7 @@ class _StudioHomeState extends State<StudioHome> {
     _searchDebounce?.cancel();
     _dsDebounce?.cancel();
     _server?.stop();
+    _pipeline.stopAllServers();
     _logScroll.dispose();
     super.dispose();
   }
@@ -1136,54 +1139,19 @@ class _StudioHomeState extends State<StudioHome> {
           const SizedBox(height: 12),
           _evalPanel(),
           const Divider(height: 28),
-          const Text('End-to-end interview A/B — original vs trained (served GGUF)',
+          const Text('End-to-end interview A/B — original vs trained',
               style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _intEndpoint,
-                style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  labelText: 'Served-GGUF endpoint (llama-server --jinja / lemonade)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            _btn('Run as original', Icons.play_circle_outline,
-                busy
-                    ? null
-                    : () async {
-                        await _step(
-                            'interview-base',
-                            () => _pipeline.evalInterview(
-                                endpoint: _intEndpoint.text.trim(),
-                                label: 'base'));
-                        if (mounted) setState(() {});
-                      }),
-            const SizedBox(width: 4),
-            _btn('Run as trained', Icons.play_circle_fill_outlined,
-                busy
-                    ? null
-                    : () async {
-                        await _step(
-                            'interview-trained',
-                            () => _pipeline.evalInterview(
-                                endpoint: _intEndpoint.text.trim(),
-                                label: 'trained'));
-                        if (mounted) setState(() {});
-                      }),
-          ]),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           const Text(
-              'Serve the ORIGINAL model and "Run as original"; serve the TRAINED '
-              'model (same or a different port) and "Run as trained" — the panel '
-              'compares both, with TPS / PP-s per side. Cases in the interview_cases '
-              'seed; transcripts in workspace/interview_runs/.',
+              'Start each GGUF (the studio serves original on :8098, trained on '
+              ':8099), wait for "model loaded", then Run each side. Cases in the '
+              'interview_cases seed; transcripts in workspace/interview_runs/.',
               style: TextStyle(fontSize: 11, color: Colors.white54)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          _abModelRow('Original', 'base', _baseGguf, busy),
+          const SizedBox(height: 6),
+          _abModelRow('Trained', 'trained', _trainedGguf, busy),
+          const SizedBox(height: 12),
           _interviewPanel(),
           const SizedBox(height: 8),
           const Text('"Eval tool-calls" scores name + JSON-args exact-match on '
@@ -1569,6 +1537,54 @@ class _StudioHomeState extends State<StudioHome> {
   }
 
   // ── End-to-end interview eval (served GGUF): coverage / once-only / TPS ──
+  // One A/B model row: path + browse + Start/Stop toggle + Run (when serving).
+  Widget _abModelRow(
+      String title, String label, TextEditingController ctl, bool busy) {
+    final running = _pipeline.serverRunning(label);
+    return Row(children: [
+      SizedBox(
+          width: 64,
+          child: Text(title,
+              style: const TextStyle(fontSize: 13, color: Colors.white70))),
+      Expanded(
+        child: TextField(
+          controller: ctl,
+          style: const TextStyle(fontSize: 12),
+          decoration: const InputDecoration(
+              isDense: true,
+              hintText: 'path to .gguf',
+              border: OutlineInputBorder()),
+        ),
+      ),
+      _browseBtn(
+          () => _pickFileInto(ctl, groups: const [
+                XTypeGroup(label: 'gguf', extensions: ['gguf'])
+              ]),
+          tip: 'Choose .gguf'),
+      const SizedBox(width: 4),
+      _btn(running ? 'Stop' : 'Start',
+          running ? Icons.stop_circle_outlined : Icons.play_arrow, () async {
+        if (running) {
+          _pipeline.stopServer(label);
+        } else {
+          await _pipeline.startServer(label: label, gguf: ctl.text.trim());
+        }
+        if (mounted) setState(() {});
+      }),
+      const SizedBox(width: 4),
+      _btn('Run', Icons.forum_outlined,
+          (busy || !running)
+              ? null
+              : () async {
+                  await _step(
+                      'interview-$label',
+                      () => _pipeline.evalInterview(
+                          endpoint: _pipeline.endpointFor(label), label: label));
+                  if (mounted) setState(() {});
+                }),
+    ]);
+  }
+
   Widget _interviewPanel() {
     final r = _pipeline.lastInterviewResult();
     if (r == null) return const SizedBox.shrink();
