@@ -76,6 +76,7 @@ class _StudioHomeState extends State<StudioHome> {
   // of GGUFs discovered in your folders (auto-selected, overridable).
   final _baseGguf = TextEditingController();
   final _trainedGguf = TextEditingController();
+  bool _casesExpanded = false; // per-case interview list collapsed by default
   List<Map<String, dynamic>> _dataRows = [];
   int _dataTotal = 0;
   String _dataFilter = 'all';
@@ -1748,21 +1749,7 @@ class _StudioHomeState extends State<StudioHome> {
       ]);
     }
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const SizedBox(height: 8),
-      Row(children: const [
-        Expanded(
-            child: Text('Run cases individually — clean per-case TPS/PP',
-                style: TextStyle(fontSize: 12, color: Colors.white70))),
-        SizedBox(
-            width: 132,
-            child: Text('original', style: TextStyle(fontSize: 11, color: Colors.white54))),
-        SizedBox(
-            width: 132,
-            child: Text('trained', style: TextStyle(fontSize: 11, color: Colors.white54))),
-      ]),
-      for (int i = 0; i < cases.length; i++)
-        Padding(
+    Widget caseRow(int i) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 1),
           child: Row(children: [
             Expanded(
@@ -1774,7 +1761,48 @@ class _StudioHomeState extends State<StudioHome> {
             sideCell(at(baseCases, i), 'base', i),
             sideCell(at(trainedCases, i), 'trained', i),
           ]),
+        );
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const SizedBox(height: 8),
+      InkWell(
+        onTap: () => setState(() => _casesExpanded = !_casesExpanded),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(children: [
+            Icon(_casesExpanded ? Icons.expand_less : Icons.expand_more,
+                size: 18, color: Colors.white70),
+            const SizedBox(width: 4),
+            Text(
+                'Run cases individually — clean per-case TPS/PP  '
+                '(${cases.length})',
+                style: const TextStyle(fontSize: 12, color: Colors.white70)),
+          ]),
         ),
+      ),
+      if (_casesExpanded) ...[
+        Row(children: const [
+          Expanded(child: SizedBox()),
+          SizedBox(
+              width: 148,
+              child: Text('original',
+                  style: TextStyle(fontSize: 11, color: Colors.white54))),
+          SizedBox(
+              width: 148,
+              child: Text('trained',
+                  style: TextStyle(fontSize: 11, color: Colors.white54))),
+        ]),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 240),
+          child: Scrollbar(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: cases.length,
+              itemBuilder: (_, i) => caseRow(i),
+            ),
+          ),
+        ),
+      ],
     ]);
   }
 

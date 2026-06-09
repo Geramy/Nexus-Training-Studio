@@ -39,6 +39,74 @@
     {
       "idea": "A photography studio app for clients to view and buy photo galleries.",
       "note": "client portal + payments"
+    },
+    {
+      "idea": "A telemedicine app for video visits with my patients.",
+      "note": "Healthcare; realtime + auth"
+    },
+    {
+      "idea": "A budgeting app that syncs my bank accounts and tracks spending.",
+      "note": "Finance; data + integrations"
+    },
+    {
+      "idea": "An app for my tutoring center to schedule sessions and track student progress.",
+      "note": "Education; scheduling + reporting"
+    },
+    {
+      "idea": "A delivery dispatch app to assign drivers and track packages.",
+      "note": "Logistics; realtime tracking"
+    },
+    {
+      "idea": "An app for my real estate agency to list properties and book showings.",
+      "note": "Real estate; listings + booking"
+    },
+    {
+      "idea": "An event planning app for weddings with vendor coordination.",
+      "note": "Events; multi-party"
+    },
+    {
+      "idea": "A meditation app with guided sessions and streaks.",
+      "note": "Wellness; content + gamification"
+    },
+    {
+      "idea": "An online store for my boutique with inventory and checkout.",
+      "note": "Retail; storefront + payments"
+    },
+    {
+      "idea": "A reservation and waitlist app for my restaurant.",
+      "note": "F&B; reservations"
+    },
+    {
+      "idea": "An internal ticketing system for my IT team.",
+      "note": "SaaS; internal/staff tool"
+    },
+    {
+      "idea": "A community app where neighbors post local events.",
+      "note": "Social; UGC"
+    },
+    {
+      "idea": "An app to control my smart home devices and set schedules.",
+      "note": "IoT; device control"
+    },
+    {
+      "idea": "A trip planner that builds itineraries and books hotels.",
+      "note": "Travel; planning + booking"
+    },
+    {
+      "idea": "A donation app for my animal shelter with recurring giving.",
+      "note": "Nonprofit; payments"
+    },
+    {
+      "idea": "An app for my auto repair shop to schedule appointments and send quotes.",
+      "note": "Automotive; scheduling + quotes"
+    },
+    {
+      "idea": "A client intake app for my law firm with document upload.",
+      "note": "Legal; forms + file uploads"
+    },
+    {
+      "idea": "A farm-stand app to sell produce and manage a CSA subscription.",
+      "note": "Agriculture; subscriptions"
     }
   ]
 }
