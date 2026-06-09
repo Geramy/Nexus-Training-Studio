@@ -96,6 +96,8 @@ class _StudioHomeState extends State<StudioHome> {
   TextEditingController? _dsCtl;
   Timer? _searchDebounce;
   Timer? _dsDebounce;
+  Timer? _interviewPoll; // live-refresh while an interview run is in progress
+  bool _wasInterviewRunning = false;
 
   List<String> _repos = [];
   List<String> _namespaces = [];
@@ -122,6 +124,20 @@ class _StudioHomeState extends State<StudioHome> {
   void initState() {
     super.initState();
     _init();
+    // Persistent live-refresh: while ANY interview run is in progress (the eval
+    // re-writes interview_result.json after each case), repaint so the panel +
+    // per-case rows update — regardless of whether the run was started from the
+    // desktop button or the remote/web command path. Cheap when idle (one file
+    // read + flag check, no rebuild unless running).
+    _interviewPoll = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      final r = _pipeline.lastInterviewResult();
+      final running = r != null &&
+          (((r['base'] as Map?)?['running'] == true) ||
+              ((r['trained'] as Map?)?['running'] == true));
+      if (running || _wasInterviewRunning) setState(() {});
+      _wasInterviewRunning = running;
+    });
   }
 
   void _addLog(String line) {
@@ -437,6 +453,7 @@ class _StudioHomeState extends State<StudioHome> {
   void dispose() {
     _searchDebounce?.cancel();
     _dsDebounce?.cancel();
+    _interviewPoll?.cancel();
     _server?.stop();
     _pipeline.stopAllServers();
     _logScroll.dispose();
