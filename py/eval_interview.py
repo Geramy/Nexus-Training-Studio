@@ -190,7 +190,7 @@ def main():
     ap.add_argument("--endpoint", default="http://127.0.0.1:8099/v1/chat/completions")
     ap.add_argument("--model", default="gguf")
     ap.add_argument("--scenarios", type=int, default=8)
-    ap.add_argument("--max-turns", type=int, default=16)
+    ap.add_argument("--max-turns", type=int, default=20)
     ap.add_argument("--label", default="trained",
                     help="which side of the A/B this run is: 'base' or 'trained'")
     ap.add_argument("--case", type=int, default=None,
@@ -199,6 +199,12 @@ def main():
     args = ap.parse_args()
 
     tools = json.loads((SEEDS / "tool_schemas.json").read_text())["setup"]
+    # Match what the app actually SERVES: the per-package library-verification
+    # tools are OFF by default in setup_tools.dart (includeLibraryTools=false), so
+    # excluding them here keeps the model from rabbit-holing in lookup_package and
+    # exhausting its turns before proposing the required stack — train==serve.
+    _off = {"lookup_package", "consider_items", "dismiss_item"}
+    tools = [t for t in tools if t.get("function", {}).get("name") not in _off]
     system_t = json.loads((SEEDS / "prompts.json").read_text())["setup_system"]
     all_cases = load_cases()
     out_dir = Path("workspace/interview_runs")
