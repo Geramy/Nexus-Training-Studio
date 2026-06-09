@@ -257,7 +257,7 @@ class StudioServer {
                     .toString(),
                 model: (obj['model'] ?? 'gguf').toString(),
                 label: (obj['label'] ?? 'trained').toString(),
-                scenarios: int.tryParse('${obj['scenarios'] ?? 8}') ?? 8);
+                scenarios: int.tryParse('${obj['scenarios'] ?? 0}') ?? 0);
             break;
           case 'export':
             fut = pipeline.exportGguf();

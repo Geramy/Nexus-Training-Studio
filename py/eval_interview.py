@@ -189,7 +189,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--endpoint", default="http://127.0.0.1:8099/v1/chat/completions")
     ap.add_argument("--model", default="gguf")
-    ap.add_argument("--scenarios", type=int, default=8)
+    ap.add_argument("--scenarios", type=int, default=0,
+                    help="how many cases to run from the top (0 = ALL)")
     ap.add_argument("--max-turns", type=int, default=20)
     ap.add_argument("--label", default="trained",
                     help="which side of the A/B this run is: 'base' or 'trained'")
@@ -212,6 +213,8 @@ def main():
     # Which seed cases to run: a single 1-based --case, else the first --scenarios.
     if args.case is not None:
         idxs = [args.case - 1] if 1 <= args.case <= len(all_cases) else []
+    elif args.scenarios <= 0:
+        idxs = list(range(len(all_cases)))  # 0 = run every case
     else:
         idxs = list(range(min(args.scenarios, len(all_cases))))
     if not idxs:

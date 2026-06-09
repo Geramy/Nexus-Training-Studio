@@ -234,7 +234,7 @@ class Pipeline {
   /// workspace/interview_result.json and per-run transcripts under
   /// workspace/interview_runs. Test cases live in the editable interview_cases seed.
   Future<int> evalInterview(
-          {required String endpoint, String model = 'gguf', int scenarios = 8,
+          {required String endpoint, String model = 'gguf', int scenarios = 0,
           String label = 'trained', int? caseIndex}) =>
       _run(_python, [
         'py/eval_interview.py', '--endpoint', endpoint,
