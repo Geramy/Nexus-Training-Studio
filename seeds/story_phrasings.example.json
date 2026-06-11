@@ -1,0 +1,68 @@
+{
+  "openers": [
+    "Okay, let me explain how I picture someone actually using it. When they open the app, the first thing should be {first}.",
+    "So here's how it should work for a {role}. They open it up and {first}.",
+    "Let me walk you through it like I'm the customer. First thing, {first}.",
+    "Picture a {role} using it: they open the app and right away {first}.",
+    "I'll describe it the way my customers would see it — when the app opens, {first}."
+  ],
+  "step_phrases": [
+    "Then they {step}.",
+    "After that they can {step}.",
+    "Next they should be able to {step}.",
+    "Once that's done, they {step}.",
+    "From there they just {step}.",
+    "And then it lets them {step}."
+  ],
+  "big_chunk": [
+    "Basically the whole thing goes like this: they {steps}, and at the very end they {last}. That's the main flow I care about.",
+    "So from start to finish — someone will {steps}, then finally {last}. Did I explain that okay?",
+    "The way I see it working: a {role} will {steps}, and when everything's done they {last}."
+  ],
+  "passing_mentions": [
+    "Oh, and there should also be {extra} somewhere, but the main thing is the flow I just described.",
+    "There's also {extra} — I haven't really thought that part through yet though.",
+    "At some point we'll want {extra} too, but that can be simple for now."
+  ],
+  "mention_details": [
+    "Hmm, for that I guess they'd want to see everything in one place and get a little alert when something changes.",
+    "Honestly just something simple — they look at it, see what's theirs, and can tap into any item for the details.",
+    "I picture them getting a notification, tapping it, and landing right on the thing that changed."
+  ],
+  "host_questions": [
+    "What happens right after they {step}?",
+    "Walk me through what they see once they {step} — what's on that screen?",
+    "You mentioned {extra} in passing — how do you picture that working?",
+    "What should happen if {edge}?",
+    "And after that — is there anything the {role} still needs to do, or is that the end of the flow?"
+  ],
+  "benefits": [
+    "the {d} runs smoothly",
+    "they save time",
+    "nothing gets missed",
+    "they always know what's going on",
+    "they don't have to call or text anyone",
+    "everything stays in one place"
+  ],
+  "edge_answers": [
+    "Good question — in that case just show them a friendly message and let them try again.",
+    "If that happens they should still be able to keep going, just without that part.",
+    "Then it should save where they were so they don't lose anything."
+  ],
+  "done_phrases": [
+    "That's everything, I think.",
+    "Yeah, that covers it for now.",
+    "That's all I want in the first version.",
+    "I think that's the whole thing — looks right to me."
+  ],
+  "confirm_closes": [
+    "So end to end: {summary}. Does that cover everything, or is there a part I'm missing?",
+    "Reading it back: {summary}. Anything you pictured that I haven't captured?",
+    "Here's the whole flow as I have it: {summary}. Did we miss anything?"
+  ],
+  "ready_closes": [
+    "Looks ready — when you're happy, press \"Generate tasks from stories\".",
+    "Great, the tree covers it. You can press \"Generate tasks from stories\" whenever you're ready.",
+    "That's a complete picture — go ahead and press \"Generate tasks from stories\" when you want to start building."
+  ]
+}

@@ -1,57 +1,58 @@
-# mlx_lm.lora config — research-backed defaults for a tool-calling hybrid MoE.
-# Run with:  python -m mlx_lm lora --config py/lora_config.yaml
-# (the Flutter app fills {base_model}; training on the 8-bit base auto-uses QLoRA.)
+# mlx_lm.lora config — ADDITIVE recovery pass (run-6), resuming from the run-4
+# final adapter. Restore py/lora_config.run4.yaml.bak for a full retrain;
+# run-5's config is preserved in workspace/adapters.run5/lora_config.run5.yaml.
 #
-# Sources: Thinking Machines "LoRA Without Regret", QLoRA paper, Biderman et al.
-# "LoRA Learns Less and Forgets Less" (see docs/research-finetuning-methodology.md).
+# Corpus: workspace/data = 8k NEW recovery examples (short/split openers +
+# features_done contrast — fixes run-5's greedy repetition collapse in the
+# opening propose_tags and the #1/#3 features re-ask) + 8k REPLAY sampled
+# from the run-4 corpus. Replay + low LR is what prevents forgetting while the
+# new shapes imprint (Biderman et al.; docs/research-finetuning-methodology.md).
 
 model: "{base_model}"
 train: true
 data: "workspace/data"          # train.jsonl + valid.jsonl (messages + tools format)
 adapter_path: "workspace/adapters"
 
-# ── Schedule ────────────────────────────────────────────────────────────────
-# Forgetting rises with BOTH trainable params and update steps (shifted power
-# law), so keep epochs modest and WATCH val loss — stop when it turns up.
-# ~iters ≈ epochs * (num_train_examples / batch_size). Tune to your dataset:
-# 50 examples → ~150 iters is ~3 epochs. Raise as the corpus grows.
-iters: 2000
-batch_size: 1
-max_seq_length: 8192            # tool prompt ≈4k; raise toward 65536 for long traces
-grad_checkpoint: true           # trade compute for memory (fits a 30B on unified RAM)
+# CONTINUE from the run-4 end-of-training weights (the shipped-candidate
+# adapter, backed up verbatim in adapters.run4) instead of fresh LoRA init.
+resume_adapter_file: "workspace/adapters.run4/adapters.safetensors"
 
-# LoRA LR ≈ 10x a full-FT LR and is ~rank-independent (Thinking Machines). Sweep
-# 5e-5 … 2e-4. Cosine decay over the FULL run (decay_steps == iters) with a short
-# warmup. With the large diverse corpus, 2000 iters sees ~2000 unique examples;
-# watch val loss and pick the best checkpoint rather than over-train.
-learning_rate: 1.0e-4
+# Completion-only loss — same rationale as the full run (see run4 backup).
+mask_prompt: true
+
+# ── Schedule ────────────────────────────────────────────────────────────────
+# Run-7: BACK to run-5's proven 1500 iters. Run-6 (800 iters) showed the
+# collapse was a DATA problem (fixed by the short/split openers — 0 runaways)
+# while the recovery discipline genuinely needs ~1500 iters to imprint
+# (12/27 at 800: thirteen cases ground the finalize gate instead of
+# recovering). Same schedule as run-5, collapse-free corpus.
+iters: 1500
+batch_size: 1
+max_seq_length: 8192
+grad_checkpoint: true
+
+# LR ~7x lower than the run-4 peak (1e-4): we are refining a settled policy,
+# not learning from scratch — low LR + replay is the anti-forgetting recipe.
+# Cosine to the same 1e-6 floor so the pass ends with settled weights.
+learning_rate: 1.5e-5
 lr_schedule:
   name: cosine_decay
-  warmup: 50
+  warmup: 30
   warmup_init: 1.0e-7
-  arguments: [1.0e-4, 2000, 1.0e-6]   # [peak_lr, decay_steps(=iters), end_lr]
+  arguments: [1.5e-5, 1500, 1.0e-6]   # [peak_lr, decay_steps(=iters), end_lr]
 
 steps_per_report: 10
-steps_per_eval: 50              # read train-vs-val loss often to catch overfitting
-save_every: 50                 # keep checkpoints so we can pick the best val one
+steps_per_eval: 100             # val loss = "didn't diverge" sanity check ONLY
+save_every: 100                 # numbered checkpoints are never shipped
 
-# Adapt the last N blocks. mlx-lm's default is 16; more layers learn more but
-# forget more. 16 is a balanced start for a 30B.
+# Must match the run-4 adapter exactly (same layers/rank/keys) so the resumed
+# weights load 1:1.
 num_layers: 16
 
 lora_parameters:
   rank: 16
-  scale: 32                     # alpha = 2 * rank (standard convention)
+  scale: 32
   dropout: 0.05
-  # Target ATTENTION **and the always-on FFN** — attention-only badly under-
-  # performs full FT on MoE models. Keys are matched as substrings, so they are
-  # PRECISE on purpose: this model has 128 ROUTED experts per MoE layer
-  # (backbone.layers.N.mixer.experts.N.{down,up}_proj — 2944 tensors). A bare
-  # "down_proj" would adapt ALL of them → param blow-up + heavy forgetting, so we
-  # adapt only `shared_experts` (the always-active FFN every token sees).
-  # Verified names via the safetensors index:
-  #   6 attention layers:  mixer.{q,k,v,o}_proj
-  #   23 Mamba/MoE layers: mixer.{in,out}_proj  +  mixer.shared_experts.{down,up}_proj
   keys:
     - "mixer.q_proj"
     - "mixer.k_proj"

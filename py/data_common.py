@@ -77,6 +77,11 @@ def append_conversations(convos, source, dedupe=True):
         # Carry the per-example tool schemas (mlx_lm "tools" format) when present.
         if isinstance(c, dict) and c.get("tools"):
             row["tools"] = c["tools"]
+        # Conversation group id: sibling examples split from one scripted convo
+        # share long prefixes — the train/valid split must keep a group on ONE
+        # side or validation loss leaks training prefixes.
+        if isinstance(c, dict) and c.get("conv"):
+            row["conv"] = c["conv"]
         rows.append(row)
         added += 1
     write_dataset(rows)

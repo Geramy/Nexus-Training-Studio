@@ -11,8 +11,12 @@ LLAMA="${2:?llama.cpp dir required}"
 QUANT_CSV="${3:-Q8_0,Q6_K,Q4_K_M}"
 # Two interpreters: MLX_PY (mlx-lm, for fuse) and CONVERT_PY (torch, for the GGUF
 # converter). They may differ — Nemotron's converter needs torch, which has no
-# wheel for the mlx env's Python. Default both to `python`.
+# wheel for the mlx env's Python. MLX_PY defaults to `python` (the studio puts
+# .venv/bin first on PATH); CONVERT_PY prefers the dedicated torch venv when present.
 MLX_PY="${MLX_PY:-python}"
+if [ -z "${CONVERT_PY:-}" ] && [ -x workspace/convert-venv/bin/python ]; then
+  CONVERT_PY="workspace/convert-venv/bin/python"
+fi
 CONVERT_PY="${CONVERT_PY:-python}"
 mkdir -p workspace/gguf
 

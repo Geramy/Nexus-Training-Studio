@@ -1,0 +1,866 @@
+{
+  "Healthcare": {
+    "name": "Care Setting",
+    "key": "care_setting",
+    "values": [
+      "Hospital / Inpatient (Acute Care)",
+      "Ambulatory / Outpatient Clinic",
+      "Telehealth / Virtual Care",
+      "Behavioral & Mental Health"
+    ],
+    "detail": [
+      {
+        "value": "Hospital / Inpatient (Acute Care)",
+        "objectives": [
+          "Achieve standards-based interoperability across the inpatient ecosystem so that orders, results, vitals, and ADT events flow between the EHR, ancillary systems, and medical devices without manual transcription, using…",
+          "Close the medication loop end-to-end (CPOE -> pharmacy verification -> barcode medication administration -> eMAR documentation) to reduce medication errors and adverse drug events at the bedside.",
+          "Detect clinical deterioration earlier by continuously ingesting bedside monitor and wearable vitals to compute Early Warning Scores (NEWS2/MEWS) and surface real-time sepsis and rapid-response alerts with minimized…",
+          "Streamline nurse and physician inpatient workflows (assessments, rounding, documentation, hand-offs, and care-team communication) to reduce cognitive load and time-to-chart while supporting staffing shortages."
+        ],
+        "features": [
+          "Computerized Provider Order Entry (CPOE) with order sets, drug-drug/drug-allergy interaction checking, and pharmacy verification routing.",
+          "Barcode Medication Administration (BCMA) with positive patient ID, the five-rights verification, and closed-loop integration to infusion pumps and automated…",
+          "Electronic Medication Administration Record (eMAR) with due/past-due/administered alerts and a continuous medication timeline per patient.",
+          "Real-time vital-signs capture and continuous monitoring with automated Early Warning Scores (NEWS2/MEWS) and central-station surveillance dashboards."
+        ]
+      },
+      {
+        "value": "Ambulatory / Outpatient Clinic",
+        "objectives": [
+          "Streamline the full outpatient encounter lifecycle (scheduling, registration, check-in, documentation, billing) within a single unified, interoperable system",
+          "Improve patient access and engagement through self-service portals, online scheduling, automated reminders, and integrated telehealth",
+          "Ensure clinical safety and care quality via e-prescribing, real-time clinical decision support, and drug-interaction/allergy alerting",
+          "Achieve and maintain regulatory compliance (HIPAA, ONC certification, FHIR/USCDI interoperability) across all data and transport"
+        ],
+        "features": [
+          "Patient scheduling and calendar with online self-scheduling, resource/room management, and waitlist",
+          "Automated appointment reminders and recall (SMS, email, voice) with two-way confirmation",
+          "Secure patient portal: appointment booking, results viewing, secure messaging, and bill pay",
+          "Digital intake and self check-in: pre-registration, forms, insurance card capture, and kiosk/QR check-in"
+        ]
+      },
+      {
+        "value": "Telehealth / Virtual Care",
+        "objectives": [
+          "Enable secure, low-latency real-time video/audio visits between patients and clinicians with HIPAA-compliant end-to-end encrypted media (SRTP) and TLS-protected signaling, backed by a signed BAA from any third-party…",
+          "Achieve clinical interoperability by exchanging patient demographics, encounters, medications, and clinical notes with EHRs (Epic, Cerner/Oracle Health, athenahealth) via HL7 v2 and FHIR R4/R5 APIs and middleware",
+          "Deliver a complete virtual-visit workflow: intake, eligibility/insurance verification, scheduling, virtual waiting room, e-prescribing (eRx/EPCS), and post-visit documentation/billing",
+          "Support multi-modal asynchronous and synchronous care: secure messaging, store-and-forward (image/document sharing), and on-demand vs. scheduled visits across web and mobile"
+        ],
+        "features": [
+          "HIPAA-compliant 1:1 and group video consultations with screen sharing, in-call chat, and audio-only fallback",
+          "Virtual waiting room with provider queue management, patient check-in, and real-time presence/status",
+          "Appointment scheduling and calendar management with provider availability, time-zone handling, and SMS/email reminders",
+          "Secure asynchronous messaging and store-and-forward sharing of images, documents, and lab results between patients and care team"
+        ]
+      },
+      {
+        "value": "Behavioral & Mental Health",
+        "objectives": [
+          "Deliver HIPAA and 42 CFR Part 2-compliant clinical documentation and care coordination across therapy, psychiatry, substance use, and group programs, with consent management for sensitive SUD records.",
+          "Expand access to care through integrated, secure telehealth (1:1, group, and asynchronous messaging) to reach underserved and remote populations.",
+          "Operationalize measurement-based care with validated instruments (PHQ-9, GAD-7, PCL-5, C-SSRS, ASAM) to track outcomes longitudinally and guide treatment.",
+          "Streamline psychiatric medication management with e-prescribing, EPCS for controlled substances, and mandated PDMP checks inside the clinical workflow."
+        ],
+        "features": [
+          "Specialty-specific clinical documentation with DSM-5/ICD-10-aligned, customizable templates for psychiatry, individual therapy, group sessions, and SUD…",
+          "Integrated telehealth for 1:1 and group video visits with in-session documentation and secure messaging.",
+          "Measurement-based care engine: administer/score validated assessments (PHQ-9, GAD-7, PCL-5, Columbia/C-SSRS, ASAM) with longitudinal outcome dashboards.",
+          "e-Prescribing with EPCS for Schedule II-V controlled substances, integrated PDMP checks, medication history, and formulary/prior-authorization lookup."
+        ]
+      }
+    ]
+  },
+  "Finance": {
+    "name": "Segment",
+    "key": "segment",
+    "values": [
+      "Retail/Digital Banking (Neobank)",
+      "Payments & Money Movement",
+      "Lending & Credit",
+      "Wealth Management & WealthTech"
+    ],
+    "detail": [
+      {
+        "value": "Retail/Digital Banking (Neobank)",
+        "objectives": [
+          "Deliver a fully-digital, branchless banking experience where customers can open an account, get verified (KYC), and start transacting in minutes from a mobile app — with no physical branch visit",
+          "Achieve bank-grade security, fraud prevention, and regulatory compliance (KYC/AML, PCI-DSS, PSD2/Open Banking, GDPR, SOC 2) as a non-negotiable foundation across every platform",
+          "Drive financial wellness and engagement through real-time spending insights, budgeting, goal-based savings, and personalized AI-driven money management nudges",
+          "Provide instant, low-cost money movement: real-time domestic transfers, multi-currency/cross-border payments, P2P, and virtual + physical card issuance with instant freeze/unfreeze"
+        ],
+        "features": [
+          "Digital KYC/identity onboarding: document scan, selfie/liveness biometric verification, and sanctions/PEP screening with AI-driven decisioning",
+          "Account opening and management with dedicated IBAN/account numbers and multi-currency wallets",
+          "Virtual and physical debit card issuance with in-app provisioning to Apple Pay / Google Pay, contactless tap-to-pay, and instant card freeze/unfreeze and…",
+          "Real-time payments: domestic instant transfers, P2P, scheduled/recurring payments, and bill pay with instant push notifications"
+        ]
+      },
+      {
+        "value": "Payments & Money Movement",
+        "objectives": [
+          "Move money reliably and atomically across accounts and rails (cards, ACH, wires, RTP/FedNow, SEPA Instant, cross-border, stablecoins) with exactly-once semantics",
+          "Maintain an immutable double-entry ledger as the financial source of truth, with every state-changing event producing a balanced atomic posting and full auditability",
+          "Enforce idempotency end-to-end (API gateway, payment service, PSP) so retries and failures never cause double charges or double settlements",
+          "Meet regulatory and security mandates: PCI DSS scope reduction via tokenization, PSD2/SCA and 3DS2, AML/KYC, and ISO 20022 messaging compliance"
+        ],
+        "features": [
+          "Double-entry immutable ledger with net-zero balanced postings, minor-units integer/string money handling (never floats), and append-only audit history",
+          "Idempotency layer keyed on client-supplied idempotency keys with a processed-events table checked before any state transition or posting",
+          "Deterministic payment state machine with explicitly defined transitions (initiated, authorized, captured, settled, refunded, failed, reversed)",
+          "Multi-rail money movement: card acquiring, ACH/ACH return handling, wires, RTP/FedNow, SEPA Instant, cross-border/FX, and stablecoin settlement"
+        ]
+      },
+      {
+        "value": "Lending & Credit",
+        "objectives": [
+          "Originate loans end-to-end from application intake through credit decisioning, underwriting, document verification, and funding with a configurable, low-touch digital workflow.",
+          "Automate credit decisioning with explainable risk models that produce approve/decline/refer outcomes plus regulator-ready adverse action reasons (ECOA/Reg B, FCRA).",
+          "Integrate the lending ecosystem: credit bureaus (Equifax, Experian, TransUnion), identity/KYC, bank data aggregation (Plaid, Finicity), e-signature, and core/ledger systems.",
+          "Service the full loan lifecycle: amortization, repayment scheduling, payments, delinquency management, collections, restructuring, and payoff."
+        ],
+        "features": [
+          "Digital loan application intake with multi-step forms, save-and-resume, and entity-centric handling of co-borrowers, guarantors, and collateral.",
+          "Configurable workflow/BPM orchestration routing applications through intake, decisioning, underwriting, verification, and funding stages.",
+          "Automated credit decisioning engine with rules + ML scoring producing tiered outcomes (auto-approve, auto-decline, manual review).",
+          "Credit bureau pulls and alternative-data ingestion (bank transactions via Plaid/Finicity, income/employment verification)."
+        ]
+      },
+      {
+        "value": "Wealth Management & WealthTech",
+        "objectives": [
+          "Provide a unified single source of truth that aggregates accounts, holdings, and transactions across custodians, banks, and brokerages for a holistic household financial picture.",
+          "Automate portfolio construction, model-based allocation, drift-aware rebalancing, and tax-aware trading (including tax-loss harvesting) to scale advisor capacity.",
+          "Deliver goal-based financial planning and projections (retirement, education, cash flow) with Monte Carlo and scenario analysis that clients can self-serve.",
+          "Enforce regulatory compliance, suitability, KYC/AML, and audit trails (SEC/FINRA, GDPR, SOC 2) while protecting sensitive financial data end to end."
+        ],
+        "features": [
+          "Multi-custodian and bank account aggregation via open-finance APIs (Plaid, Yodlee, MX, SnapTrade) with consent management.",
+          "Model portfolio management with mean-variance / efficient-frontier optimization, Black-Litterman, and risk-parity allocation.",
+          "Automated drift-based and time-based rebalancing engine with tax-aware trade generation and tax-loss harvesting.",
+          "Goal-based financial planning with Monte Carlo simulations, retirement and cash-flow projections, and what-if scenarios."
+        ]
+      }
+    ]
+  },
+  "Education": {
+    "name": "Education Level",
+    "key": "level",
+    "values": [
+      "Early Childhood / Pre-K",
+      "K-12 Primary",
+      "K-12 Secondary",
+      "Higher Education / University"
+    ],
+    "detail": [
+      {
+        "value": "Early Childhood / Pre-K",
+        "objectives": [
+          "Build foundational early-literacy skills (letter recognition, phonics/phonemic awareness, sight words, tracing) through play-based, age-appropriate (ages 2-5) interactions",
+          "Develop early numeracy and pre-math concepts: counting, number recognition, quantity, shapes, patterns, sorting, and simple addition",
+          "Align learning content to recognized early-childhood frameworks (Head Start Early Learning Outcomes Framework, state pre-K standards, Common Core where applicable)",
+          "Provide adaptive, scaffolded progression with immediate, encouraging feedback and no punitive failure states"
+        ],
+        "features": [
+          "Interactive alphabet and phonics activities with letter tracing, sound association, and matching exercises",
+          "Early numeracy mini-games: counting, number tracing, quantity comparison, sequencing, and simple addition puzzles",
+          "Audio-first narration and voice prompts so pre-readers can follow instructions and navigate independently",
+          "Large-target, low-text touch UI with bright visuals, animated characters/mascots, and forgiving hit areas for small hands"
+        ]
+      },
+      {
+        "value": "K-12 Primary",
+        "objectives": [
+          "Deliver standards-aligned (Common Core / state standards) foundational literacy and numeracy instruction for grades K-5/6 through age-appropriate, low-text, icon-driven experiences.",
+          "Drive engagement and intrinsic motivation for young learners via gamification (XP, badges, streaks, avatars, rewards) balanced to avoid distraction from learning goals.",
+          "Personalize learning paths with adaptive difficulty so each child practices at their individual ability level and pace, with mastery-based progression.",
+          "Give teachers actionable, real-time visibility into class and per-student progress, standards mastery, and intervention needs through dashboards and reports."
+        ],
+        "features": [
+          "Adaptive practice engine that adjusts question difficulty in real time based on student responses and mastery models.",
+          "Gamified reward system: customizable avatars, XP/levels, badges, daily streaks, coins, and unlockable themes to reinforce progress.",
+          "Audio-first UI with text-to-speech read-aloud, voice instructions, and minimal reading dependency for pre- and emergent readers.",
+          "Standards-aligned content library mapped to Common Core / state standards across reading, phonics, math, science, and writing."
+        ]
+      },
+      {
+        "value": "K-12 Secondary",
+        "objectives": [
+          "Deliver standards-aligned curriculum and coursework for grades 6-12 with course/section structure, prerequisites, and credit/graduation tracking.",
+          "Support blended and remote learning via assignment distribution, online submission, auto-grading, and a reliable standards-based gradebook.",
+          "Give parents/guardians and students transparent, real-time visibility into grades, attendance, assignments, and standards progress.",
+          "Provide formative and summative assessment tooling (quizzes, tests, rubrics, mastery tracking) that feeds directly into the gradebook and analytics."
+        ],
+        "features": [
+          "Course and section management with grade-level (6-12) structure, terms/semesters, credits, and graduation/transcript tracking.",
+          "Standards-based gradebook with customizable grading scales, mastery/proficiency tracking against learning standards, and custom report cards.",
+          "Assignment workflow: distribution, online submission, due dates, late/missing flags, and auto-grading for quizzes and tests.",
+          "Assessment builder: quizzes, tests, rubrics, question banks, randomized items, and direct gradebook write-back."
+        ]
+      },
+      {
+        "value": "Higher Education / University",
+        "objectives": [
+          "Deliver a unified academic platform spanning the full student lifecycle from admissions and enrollment through advising, coursework, graduation, and alumni engagement",
+          "Increase student retention and completion rates via early-alert analytics, degree-audit/what-if planning, and proactive advising interventions",
+          "Enable flexible course delivery (in-person, online, hybrid, and competency-based) with accessible, mobile-first learning experiences",
+          "Ensure academic integrity and assessment validity through secure proctoring, plagiarism/AI-detection, and auditable grading workflows"
+        ],
+        "features": [
+          "Learning management with course shells, modules, content authoring, and SCORM/xAPI/H5P content support",
+          "Student information system: registration, waitlists, prerequisite validation, real-time seat availability, and transcripts",
+          "Automated degree audit with what-if scenario planning and graduation-eligibility verification against curriculum rules",
+          "Assignment submission, rubric-based grading, and a gradebook with grade passback over LTI Advantage"
+        ]
+      }
+    ]
+  },
+  "E-commerce": {
+    "name": "Business Model",
+    "key": "businessModel",
+    "values": [
+      "B2C Retail",
+      "B2B Wholesale",
+      "D2C (Direct-to-Consumer)",
+      "Multi-vendor Marketplace"
+    ],
+    "detail": [
+      {
+        "value": "B2C Retail",
+        "objectives": [
+          "Maximize conversion rate and average order value across the discovery-to-checkout funnel through fast, relevant search, AI-driven personalization, and frictionless checkout",
+          "Deliver a sub-100ms, mobile-first shopping experience that performs under peak/seasonal traffic spikes (flash sales, holiday surges)",
+          "Provide omnichannel continuity so cart, wishlist, account, and order history are consistent across web, iOS, Android, and in-store touchpoints",
+          "Securely process high-volume retail payments (cards, wallets, BNPL) with PCI-DSS compliance and low payment-failure rates"
+        ],
+        "features": [
+          "Product catalog with categories, variants, rich media, and merchandising/collection management",
+          "AI-powered search and autocomplete with typo tolerance, faceted filtering, and ranking (Algolia/Elasticsearch)",
+          "Personalized product recommendations and cross-sell/upsell bundles based on browsing and purchase behavior",
+          "Shopping cart with persistence, saved-for-later, and guest-to-account cart merging"
+        ]
+      },
+      {
+        "value": "B2B Wholesale",
+        "objectives": [
+          "Shift buyers from phone/email/fax ordering to 24/7 self-service portals, since ~80% of B2B buyers prefer self-service for reordering, freeing sales reps for higher-value relationship work",
+          "Increase Average Order Value (AOV) by removing ordering friction and surfacing volume/tiered pricing breaks, cross-sell, and fast reordering of past purchases",
+          "Reduce manual order-entry errors and costly supply-chain mistakes by syncing catalog, pricing, inventory, and orders to a single source of truth (ERP) in real time",
+          "Enforce account-specific contract pricing, customer-specific catalogs, and multi-org account hierarchies with role-based purchasing approvals"
+        ],
+        "features": [
+          "Customer-specific and tiered/volume pricing engine with contract price lists and per-account catalogs",
+          "Bulk ordering tools: CSV/quick-order pad, SKU-and-quantity grid entry, saved order templates, and one-click reorder from history",
+          "Net terms, purchase-order (PO) checkout, credit-line limits, and partial/backorder fulfillment support",
+          "B2B account hierarchies with multiple buyers per company, spending limits, and multi-step order approval workflows"
+        ]
+      },
+      {
+        "value": "D2C (Direct-to-Consumer)",
+        "objectives": [
+          "Sell directly to end customers without retail/marketplace intermediaries, owning the full purchase funnel and margin from storefront to fulfillment",
+          "Capture and unify first-party customer data (browsing, purchase, loyalty, app, and POS signals) into a single profile to drive personalization without reliance on third-party cookies",
+          "Maximize customer lifetime value (LTV) through subscriptions, replenishment, loyalty tiers, and post-purchase engagement rather than one-off transactions",
+          "Deliver a fast, branded, omnichannel buying experience (web, PWA, native app, social) with sub-second storefront performance and consistent design control"
+        ],
+        "features": [
+          "Headless branded storefront with custom theming, CMS-driven content pages, and collection/PLP/PDP merchandising",
+          "Product catalog with variants, bundles, configurable options, rich media, and structured metadata for SEO",
+          "Frictionless checkout supporting cards, wallets (Apple Pay/Google Pay), BNPL, and one-click/express flows",
+          "Subscription and replenishment engine (recurring billing, pause/skip/swap, dunning management)"
+        ]
+      },
+      {
+        "value": "Multi-vendor Marketplace",
+        "objectives": [
+          "Enable third-party vendors to self-onboard, get verified (KYC/business docs), and manage their own catalogs, inventory, and orders through dedicated seller dashboards",
+          "Provide a unified buyer experience where products from many vendors are searchable, filterable, and combinable into a single cart and checkout",
+          "Automate split payments and payouts: collect from the buyer, deduct marketplace commission, and route each vendor's share via a payment orchestration layer (e.g. Stripe Connect / Adyen for Platforms)",
+          "Operate a flexible commission and fee engine (per-category, per-vendor, tiered) with transparent reconciliation and automated, scheduled payouts"
+        ],
+        "features": [
+          "Vendor onboarding & KYC workflow (application, document collection for business license/tax/insurance, approval and activation)",
+          "Per-vendor seller dashboard with product, inventory, pricing, and order management",
+          "Shared multi-vendor product catalog with category taxonomy and per-vendor listings",
+          "Faceted search, autocomplete, and discovery (Algolia / Elasticsearch / OpenSearch backed)"
+        ]
+      }
+    ]
+  },
+  "Gaming": {
+    "name": "Genre",
+    "key": "genre",
+    "values": [
+      "RPG",
+      "FPS",
+      "MOBA",
+      "MMO"
+    ],
+    "detail": [
+      {
+        "value": "RPG",
+        "objectives": [
+          "Deliver deep character progression systems (stats, skill trees, classes, leveling, equipment) that give players meaningful build choices",
+          "Build branching narrative and quest systems with dialogue trees, choice/consequence tracking, and persistent world state",
+          "Implement robust combat systems (turn-based, real-time action, or tactical grid) tuned for balance, depth, and clear feedback",
+          "Architect scalable inventory, item, loot, and economy systems including crafting, vendors, and rarity tiers"
+        ],
+        "features": [
+          "Character creation and class/race system with allocatable attributes and appearance customization",
+          "Skill trees and ability/talent progression with experience, leveling curves, and respec support",
+          "Inventory and equipment system with item rarity tiers, stat modifiers, and equipment slots",
+          "Crafting, gathering, and in-game economy with vendors, currencies, and item upgrades"
+        ]
+      },
+      {
+        "value": "FPS",
+        "objectives": [
+          "Deliver tight, responsive first-person shooting mechanics with a stable 60+ FPS (120+ for competitive) and a minimal input-to-render pipeline.",
+          "Implement authoritative server-side netcode with client-side prediction, server reconciliation, and lag compensation (hit rewind) for fair, cheat-resistant gunplay.",
+          "Build scalable multiplayer infrastructure: matchmaking, lobbies/sessions, and dedicated server orchestration that auto-scales game-server instances per match.",
+          "Ship an iteration-friendly content pipeline for maps, weapons, characters, and animations supporting seasonal/live-ops content."
+        ],
+        "features": [
+          "First-person weapon system with hitscan and projectile ballistics, per-weapon recoil/spread patterns, ADS (aim-down-sights), reload and weapon-switch states,…",
+          "Authoritative-server netcode with client-side prediction, server reconciliation, entity interpolation, and lag compensation (server-side hit rewind) for fair…",
+          "Movement and gunplay feel: strafing, sprinting, crouch/slide, jump, mantling, plus FPS-camera handling with view-bob, FOV scaling, and weapon sway.",
+          "Matchmaking, lobby, and session management (skill-based matchmaking, party/group join, region selection) with reconnection handling."
+        ]
+      },
+      {
+        "value": "MOBA",
+        "objectives": [
+          "Deliver a competitively balanced 5v5/3v3 lane-and-jungle arena where two teams destroy the enemy core, with deterministic low-latency gameplay as the core constraint.",
+          "Guarantee server-authoritative simulation and anti-cheat integrity so ranked match outcomes are fair, reproducible, and tamper-resistant.",
+          "Achieve sub-60ms perceived input latency via client-side prediction, server reconciliation, and lag compensation for responsive skill-shots and abilities.",
+          "Build robust MMR-based matchmaking and a ranked ladder that produces balanced lobbies and minimizes queue times across solo, party, and competitive play."
+        ],
+        "features": [
+          "Hero/champion roster with unique kits: multiple active abilities, passives, ultimate, scaling stats, and per-hero ability cooldown/resource systems.",
+          "Lane-based map with towers, inhibitors, a destructible core/nexus, jungle camps, neutral objectives (dragon/baron-style), and vision/fog-of-war with wards.",
+          "Minion/creep waves with last-hit gold mechanics and an in-match item shop driving build progression.",
+          "Server-authoritative match simulation with client-side prediction, reconciliation, and lag compensation for skill-shots and crowd-control."
+        ]
+      },
+      {
+        "value": "MMO",
+        "objectives": [
+          "Sustain a persistent, always-online shared world where thousands of concurrent players coexist, with state that survives logout, server restarts, and patches",
+          "Achieve horizontal scalability through zone partitioning, sharding, instancing, and elastic cloud autoscaling so concurrency can grow without a single-server ceiling",
+          "Enforce a server-authoritative simulation that validates movement, combat, and economy actions to prevent cheating, duping, and exploits",
+          "Deliver low-latency real-time synchronization (movement, combat, chat) with interest management so each client only receives relevant nearby state"
+        ],
+        "features": [
+          "Persistent character system with accounts, inventories, equipment, stats, and progression saved server-side across sessions",
+          "Seamless or zoned open world using spatial partitioning, World Partition / zone servers, and dynamic loading of regions",
+          "Server-authoritative movement and combat with client-side prediction, interpolation, and lag compensation",
+          "Interest management / area-of-interest culling so clients only sync entities within their visible range"
+        ]
+      }
+    ]
+  },
+  "Logistics": {
+    "name": "Mode",
+    "key": "mode",
+    "values": [
+      "Road Freight (FTL/LTL)",
+      "Last-Mile Delivery",
+      "Ocean Freight",
+      "Air Cargo"
+    ],
+    "detail": [
+      {
+        "value": "Road Freight (FTL/LTL)",
+        "objectives": [
+          "Maximize asset and capacity utilization by intelligently planning loads — consolidating LTL freight and minimizing deadhead miles for FTL — to lower cost-per-mile and raise revenue per truck.",
+          "Provide end-to-end real-time shipment visibility (GPS/ELD/telematics) with accurate ETAs and proactive exception alerts for shippers, brokers, and consignees.",
+          "Automate the load lifecycle — tendering, carrier selection, rate shopping, booking, status updates, POD capture, invoicing, and freight-bill audit — to reduce manual touches and errors.",
+          "Ensure regulatory and safety compliance (FMCSA HOS/ELD, DVIR, IFTA, carrier authority/insurance verification) is enforced and auditable."
+        ],
+        "features": [
+          "Load planning and optimization engine that consolidates LTL shipments and builds FTL loads using weight, cube, freight class, lane, and capacity constraints.",
+          "Multi-carrier rate shopping and quoting with contract rates, spot rates, fuel surcharges, accessorials, and least-cost carrier/mode selection.",
+          "Automated load tendering and acceptance via EDI 204 / 990 and API, with auto-tender waterfall to ranked carriers.",
+          "Dispatch board with drag-and-drop driver/truck assignment, real-time capacity tracking, and double-booking prevention."
+        ]
+      },
+      {
+        "value": "Last-Mile Delivery",
+        "objectives": [
+          "Minimize cost-per-delivery and total route distance/time through AI-driven multi-stop route optimization respecting vehicle capacity, time windows, driver shifts, and service constraints",
+          "Provide real-time end-to-end visibility of every shipment, vehicle, and driver via live GPS tracking and planned-vs-actual progress for dispatchers and customers",
+          "Enable dynamic re-optimization and re-dispatch in seconds when traffic, weather, cancellations, failed deliveries, or last-minute orders disrupt planned routes",
+          "Maximize on-time delivery and first-attempt success rates while shrinking and accurately predicting delivery ETAs/time windows"
+        ],
+        "features": [
+          "AI/constraint-based route optimization engine (CVRP / VRP with time windows, capacity, multi-depot, heterogeneous fleet)",
+          "Real-time dynamic re-routing and auto-dispatch reacting to traffic, exceptions, and new orders mid-route",
+          "Driver mobile app with turn-by-turn navigation, optimized stop sequence, and offline navigation mode",
+          "Live GPS fleet tracking with planned-vs-actual route monitoring on an interactive map"
+        ]
+      },
+      {
+        "value": "Ocean Freight",
+        "objectives": [
+          "Provide end-to-end ocean shipment execution covering rate management, quotation, carrier/NVOCC booking, and BL filing for FCL and LCL/NVOCC operations in one platform",
+          "Deliver real-time, multi-source container visibility (carrier EDI/API, AIS vessel tracking, port/terminal events) with predictive ETAs and a single source of truth",
+          "Reduce demurrage and detention costs and avoidable expedited shipments through proactive exception alerts and milestone monitoring",
+          "Automate trade documentation generation (Master/House Bill of Lading, commercial invoice, packing list, arrival notice) auto-populated from shipment data"
+        ],
+        "features": [
+          "FCL/LCL and NVOCC shipment management with consolidation and house/master bill linkage",
+          "Carrier and NVOCC e-booking with direct EDI/API submission and sailing schedule lookup",
+          "Ocean rate management and instant multi-carrier quotation engine",
+          "Real-time container tracking aggregating carrier EDI, AIS vessel positions, and port/terminal events"
+        ]
+      },
+      {
+        "value": "Air Cargo",
+        "objectives": [
+          "Digitize the end-to-end air freight lifecycle from quote and booking to delivery, replacing paper AWBs with e-AWB and IATA ONE Record compliant electronic data exchange across forwarders, carriers, GHAs, and customs",
+          "Maximize uplift capacity utilization and yield through demand forecasting, allotment management, and dynamic/real-time pricing tied to live flight availability, fuel costs, and demand signals",
+          "Provide real-time, milestone-level shipment visibility (FFM/FSU status, IoT/Interactive Cargo sensor data) so all stakeholders can track AWB and ULD position, condition, and ETA",
+          "Optimize physical handling and load planning: ULD build-up, weight-and-balance constraints, warehouse acceptance, and dangerous-goods/special-cargo segregation"
+        ],
+        "features": [
+          "Instant rate management and quoting engine combining static contract rates, live carrier rates, and surcharges across hundreds of airlines",
+          "Online eBooking with live capacity search, allotment/allocation control, and one-click conversion of quotes to AWB/HAWB",
+          "Electronic Air Waybill (e-AWB) and house manifest generation with IATA Cargo-XML / ONE Record message exchange (FWB, FHL, FSU, FFM)",
+          "Real-time shipment tracking dashboard with milestone status updates, exception alerts, and customer-facing track-and-trace portal"
+        ]
+      }
+    ]
+  },
+  "Manufacturing": {
+    "name": "Manufacturing Sector",
+    "key": "sector",
+    "values": [
+      "Discrete Manufacturing",
+      "Process Manufacturing",
+      "Automotive",
+      "Aerospace & Defense"
+    ],
+    "detail": [
+      {
+        "value": "Discrete Manufacturing",
+        "objectives": [
+          "Maximize Overall Equipment Effectiveness (OEE) by reducing unplanned downtime, cycle-time loss, and quality defects across discrete production lines (machining, assembly, electronics, fabrication)",
+          "Provide full genealogy and traceability for serialized/lot-tracked discrete parts from raw material through BOM consumption to finished goods, supporting recalls and compliance (IATF 16949, AS9100, ISO 9001)",
+          "Deliver real-time shop-floor visibility by integrating machine/PLC data (OPC-UA, MQTT Sparkplug B) with MES, ERP, and quality systems for a unified production picture",
+          "Optimize finite production scheduling and dispatching against work orders, BOMs, routings, and constrained resources to improve on-time delivery and throughput"
+        ],
+        "features": [
+          "Work order and production order management with BOM, routing, and operation-level dispatching to work centers",
+          "Real-time OEE dashboards (availability, performance, quality) with downtime reason codes and Pareto/Andon visualization",
+          "Machine/PLC connectivity layer using OPC-UA and MQTT Sparkplug B for automated data acquisition from Siemens, Allen-Bradley, Beckhoff controllers",
+          "Serialized/lot genealogy and full forward/backward traceability with as-built vs as-designed BOM comparison"
+        ]
+      },
+      {
+        "value": "Process Manufacturing",
+        "objectives": [
+          "Digitize batch and continuous production with electronic batch records (EBR), recipe/formula management, and full lot-to-lot genealogy traceability",
+          "Capture, contextualize, and historize real-time process data (sensors, PLCs, DCS) via OPC UA/MQTT/Modbus for monitoring, control, and analytics",
+          "Enforce quality, in-process validations, and regulatory compliance (FDA 21 CFR Part 11, GMP) with immutable audit trails and electronic signatures",
+          "Optimize plant performance through OEE tracking, yield/scrap analysis, downtime/anomaly detection, and predictive maintenance"
+        ],
+        "features": [
+          "Electronic batch record (EBR) authoring, execution, and review-by-exception with electronic signatures",
+          "Recipe and formula management with versioning, scaling, approvals, and parameter limits",
+          "Production planning, scheduling, and dispatch with finite-capacity and campaign sequencing",
+          "Real-time process data acquisition from PLC/DCS/sensors via OPC UA, MQTT Sparkplug B, and Modbus"
+        ]
+      },
+      {
+        "value": "Automotive",
+        "objectives": [
+          "Digitize and orchestrate the vehicle production line end-to-end with a Manufacturing Execution System (MES/MOM) that enforces routing, work instructions, and build sequence across body, paint, and final assembly shops",
+          "Achieve full part and vehicle genealogy/traceability (VIN-level, serialized components, torque/test results) to satisfy IATF 16949 and OEM recall/warranty requirements",
+          "Connect OT and IT layers via OPC UA and MQTT so PLCs, robots, AGVs, and torque tools stream real-time data into historians, analytics, and ERP",
+          "Maximize Overall Equipment Effectiveness (OEE) and reduce unplanned downtime through condition monitoring, predictive maintenance, and andon/escalation workflows"
+        ],
+        "features": [
+          "MES/MOM production order and routing engine with electronic work instructions and poka-yoke interlocks at each station",
+          "VIN-centric genealogy and serialized traceability linking components, torque values, leak/EOL test results, and operator/shift data",
+          "OPC UA / MQTT unified namespace connectivity layer with edge gateways bridging Modbus, PROFINET, and EtherNet/IP legacy assets",
+          "Real-time OEE, andon, and downtime dashboards with automatic fault-reason capture and escalation to maintenance"
+        ]
+      },
+      {
+        "value": "Aerospace & Defense",
+        "objectives": [
+          "Establish an end-to-end digital thread that links requirements, MBSE/CAD design, manufacturing execution, quality, and MRO/sustainment so every part and serial number is traceable across a decades-long program lifecycle",
+          "Enforce regulatory and contractual compliance by design - AS9100, NADCAP, ITAR/EAR export control, DFARS/CMMC cybersecurity, FAA/EASA airworthiness, and FOD/counterfeit-part controls",
+          "Guarantee full serialized as-designed / as-built / as-maintained configuration traceability and genealogy for every component, lot, and assembly",
+          "Maximize first-pass yield and reduce nonconformance through paperless work instructions, in-line inspection, SPC, and closed-loop quality (CAPA/NCR/MRB)"
+        ],
+        "features": [
+          "Digital thread integration hub connecting PLM (Teamcenter/Windchill/Arena), ERP, MES, CAD, and IIoT into a single authoritative configuration record",
+          "Manufacturing Execution System (MES) shop-floor app with electronic work orders, paperless 3D work instructions, and operator e-signoff/buyoff",
+          "Serialized as-built genealogy and configuration management tracking every part, lot, serial number, and effectivity against the engineering baseline",
+          "AS9100/NADCAP quality management with NCR, CAPA, MRB disposition, SPC charting, and FAIR (First Article Inspection Report / AS9102) generation"
+        ]
+      }
+    ]
+  },
+  "Media": {
+    "name": "Media Format",
+    "key": "format",
+    "values": [
+      "Streaming Video (OTT/VOD)",
+      "Live Broadcast",
+      "Audio & Podcasting",
+      "Music Streaming"
+    ],
+    "detail": [
+      {
+        "value": "Streaming Video (OTT/VOD)",
+        "objectives": [
+          "Deliver adaptive-bitrate (ABR) video playback over HLS and MPEG-DASH/CMAF that starts fast, rarely rebuffers, and adjusts quality to network conditions across phones, browsers, and TVs",
+          "Protect premium content end-to-end with multi-DRM (Widevine, FairPlay, PlayReady) over Common Encryption (CENC), signed/tokenized URLs, and forensic watermarking to satisfy studio licensing",
+          "Build a scalable ingest-to-edge media pipeline (encode, transcode, package, segment, multi-CDN delivery) that handles both VOD libraries and live linear/event streaming",
+          "Maximize device reach by shipping consistent apps across Mobile (iOS/Android), Web, Smart TVs (Tizen, webOS, Android/Google TV, tvOS, Roku, Fire TV), and game consoles"
+        ],
+        "features": [
+          "ABR video player with HLS and MPEG-DASH/CMAF support, automatic quality switching, and bandwidth estimation",
+          "Multi-DRM playback (Widevine, FairPlay Streaming, PlayReady) with CENC-encrypted content and license acquisition",
+          "Adaptive content catalog / browse UI with rows, hero carousels, genres, and rich artwork metadata",
+          "Personalized recommendations, Continue Watching, My List/Watchlist, and resume-from-position across devices"
+        ]
+      },
+      {
+        "value": "Live Broadcast",
+        "objectives": [
+          "Deliver real-time, continuous live video/audio from contribution (camera/encoder ingest) through transcoding to large-audience playback with predictable, tunable end-to-end latency (sub-second WebRTC for interactivity,…",
+          "Support the full live protocol matrix for ingest and delivery: SRT/RTMP/WHIP for contribution and HLS/LL-HLS/MPEG-DASH/WebRTC for distribution, with seamless protocol bridging and no unnecessary re-encoding.",
+          "Scale to hundreds of thousands of concurrent viewers via adaptive bitrate (ABR) ladders, CMAF segments, multi-CDN delivery, and elastic cloud transcoding while controlling cost-per-viewer.",
+          "Provide a production-grade broadcast workflow: multi-source switching, scenes/overlays/graphics, audio mixing, and live encoding comparable to OBS/vMix-style studios."
+        ],
+        "features": [
+          "Multi-protocol ingest endpoints (SRT, RTMP/RTMPS, WHIP/WebRTC) with per-stream keys and authentication.",
+          "Real-time adaptive bitrate transcoding generating an ABR ladder in CMAF/fMP4 for HLS, LL-HLS, and MPEG-DASH delivery.",
+          "Sub-second WebRTC delivery path (WHEP) alongside LL-HLS for a hybrid low-latency + scale fan-out.",
+          "Live production switcher: scenes, multi-camera/source inputs, transitions, lower-thirds/graphics overlays, and chroma key."
+        ]
+      },
+      {
+        "value": "Audio & Podcasting",
+        "objectives": [
+          "Capture studio-quality audio across local and remote contributors, including double-ender local recording so quality does not degrade with network conditions",
+          "Provide a non-destructive multitrack editing workflow (trim, split, fade, ducking, multi-speaker tracks) accessible to non-engineers",
+          "Automate post-production: loudness normalization to platform targets (-16 LUFS Apple / -14 LUFS Spotify), noise reduction, de-essing, and silence/filler-word removal",
+          "Generate accurate transcripts with speaker diarization, chapters, and show notes to drive accessibility and discoverability"
+        ],
+        "features": [
+          "Multitrack recorder with separate per-speaker tracks and automatic local (double-ender) capture for remote guests",
+          "Browser/WebRTC remote interview studio with progressive uploads and real-time cloud backup of each track",
+          "Waveform-based non-destructive editor with trim, split, crossfade, ripple delete, and clip-level gain",
+          "Automatic transcript generation with speaker diarization, editable text-based editing (edit audio by editing words), and filler-word/silence removal"
+        ]
+      },
+      {
+        "value": "Music Streaming",
+        "objectives": [
+          "Deliver gapless, low-latency on-demand audio playback with adaptive bitrate so streams stay smooth across cellular, Wi-Fi, and constrained networks",
+          "Maximize catalog discovery and listening time through personalized recommendations, radio/autoplay, editorial playlists, and search",
+          "Protect licensed audio with DRM and secure key delivery while honoring per-territory and per-label licensing constraints",
+          "Support offline/download listening with encrypted local caching for premium subscribers"
+        ],
+        "features": [
+          "On-demand track playback with play/pause/seek, gapless and crossfade transitions",
+          "Adaptive bitrate streaming (HLS/MPEG-DASH) with multiple AAC/Opus/FLAC quality tiers and automatic quality switching",
+          "Personalized recommendations and auto-generated radio/Daily-Mix style playlists driven by a vector/embedding similarity engine",
+          "Full-text and fuzzy search across tracks, albums, artists, and playlists with typeahead"
+        ]
+      }
+    ]
+  },
+  "Government": {
+    "name": "Government Level / Branch",
+    "key": "level",
+    "values": [
+      "Federal Executive Agency",
+      "Federal Legislative",
+      "Federal Judicial",
+      "Department of Defense / Military"
+    ],
+    "detail": [
+      {
+        "value": "Federal Executive Agency",
+        "objectives": [
+          "Deliver public-facing digital services (benefits applications, status lookups, forms, payments) that meet the 21st Century IDEA Act and execute the agency's statutory mission online",
+          "Achieve and maintain FedRAMP, FISMA, and NIST 800-53 authorization (ATO) across all hosted systems with continuous monitoring and audit-ready compliance evidence",
+          "Guarantee Section 508 / WCAG 2.1 AA accessibility and mobile-friendly, user-centered design for every citizen-facing interface",
+          "Modernize legacy mainframe and monolithic systems into secure, cloud-native, API-driven services running in GovCloud / Azure Government"
+        ],
+        "features": [
+          "Public benefits / eligibility application portal with multi-step forms, save-and-resume, and document upload",
+          "Case management and workflow engine for caseworkers (intake, assignment, adjudication, status tracking, SLA timers)",
+          "Identity and authentication integration with Login.gov, PIV/CAC smart cards, and multi-factor / OIDC SSO",
+          "Citizen self-service account dashboard (application status, notifications, correspondence, secure messaging)"
+        ]
+      },
+      {
+        "value": "Federal Legislative",
+        "objectives": [
+          "Digitize the end-to-end bill lifecycle (drafting, amending, engrossment, enrollment) on structured legislative XML standards (USLM, Akoma Ntoso) so legislation is machine-readable and interoperable across the House,…",
+          "Provide authoritative real-time legislative tracking and analytics covering bill status, committee actions, floor schedules, votes, and the Congressional Record",
+          "Publish open, bulk legislative data through standards-based APIs (Congress.gov API, GPO govinfo) for transparency and civic-tech reuse",
+          "Modernize floor and committee operations with auditable electronic voting, roll-call tally, quorum, and hearing-management systems"
+        ],
+        "features": [
+          "Structured bill and amendment drafting editor with native USLM / Akoma Ntoso XML markup, validation, and section/citation auto-linking",
+          "Comparative print / redline engine that shows how a bill amends current U.S. Code and how amendments change a bill line-by-line (NLP-assisted)",
+          "Legislative tracking dashboard with real-time status, committee actions, calendars, floor schedules, and configurable alerts/notifications",
+          "Roll-call and electronic voting capture with tally, quorum detection, vote journals, and tamper-evident audit/transaction logs"
+        ]
+      },
+      {
+        "value": "Federal Judicial",
+        "objectives": [
+          "Modernize core case management and electronic case filing (CM/ECF/NextGen) onto a secure, cloud-based, agile-developed platform that replaces the aging legacy system across district, appellate, and bankruptcy courts",
+          "Provide unified, full-text public access to court records (PACER successor) with cross-court search, fuzzy/semantic search, and consistent fee/identity management",
+          "Achieve interoperability among courts and external filers via open standards (OASIS ECF 5.0/5.01, NIEM XML/JSON message exchange) for e-filing, service of process, and hearing scheduling",
+          "Meet federal security, privacy, and compliance mandates (FedRAMP High, NIST 800-53, FISMA, CJIS, sealed/redacted record handling) with continuous monitoring and zero-trust controls"
+        ],
+        "features": [
+          "Electronic case filing (e-filing) intake with document upload, PDF/A validation, automated docketing, and electronic signature/stamping",
+          "ECF 5.0 / NIEM-conformant messaging gateway for vendor and court-to-court interoperability (filing, review, service, scheduling MDEs)",
+          "Unified full-text and metadata case search with fuzzy logic, judge-name search, and faceted filtering across all federal courts",
+          "Public records access portal (PACER successor) with registration, role-based access, per-page billing, and fee exemption handling"
+        ]
+      },
+      {
+        "value": "Department of Defense / Military",
+        "objectives": [
+          "Deliver and sustain a secure DevSecOps software factory (DoD Enterprise reference design / Platform One model) that yields a continuous Authority to Operate (cATO) for warfighting applications",
+          "Achieve and maintain DoD RMF accreditation and Impact Level authorizations (IL2/IL4/IL5/IL6) with hardened, signed container supply chains (Iron Bank) and DISA STIG compliance",
+          "Provide real-time, multi-domain command and control (C2) and a Common Operational Picture (COP) supporting JADC2/CJADC2 sensor-to-shooter workflows",
+          "Build safety- and mission-critical embedded software for weapon systems and avionics certified to DO-178C/DO-254 and partitioned per ARINC 653 and FACE"
+        ],
+        "features": [
+          "Common Operational Picture (COP) with 2D/3D geospatial fusion of live sensor, friendly-force, and intelligence tracks",
+          "Cursor on Target (CoT) messaging and tactical data link integration (Link 16, VMF) for cross-system track sharing",
+          "Mission planning, rehearsal, and route/airspace deconfliction tools with terrain and threat analysis",
+          "Sensor and ISR feed ingestion (full-motion video, SIGINT, radar, satellite imagery) with real-time correlation and alerting"
+        ]
+      }
+    ]
+  },
+  "Security": {
+    "name": "Security Domain",
+    "key": "domain",
+    "values": [
+      "Endpoint Detection & Response (EDR/XDR)",
+      "SIEM & Security Analytics",
+      "SOAR & Security Automation",
+      "Vulnerability Management"
+    ],
+    "detail": [
+      {
+        "value": "Endpoint Detection & Response (EDR/XDR)",
+        "objectives": [
+          "Achieve continuous, low-overhead telemetry capture from every managed endpoint (process, file, registry, network, authentication, and kernel events) at under ~2-5% sustained CPU cost so the agent is deployable on…",
+          "Detect adversary behavior in real time by combining signature engines (YARA), behavioral rules (Sigma / MITRE ATT&CK mapping), and ML/anomaly scoring rather than relying on static IoCs alone",
+          "Provide rapid response and containment: one-click host isolation, process kill/quarantine, file removal, and ransomware rollback while keeping the endpoint reachable for forensics",
+          "Correlate signals across endpoints, identity, network, email, and cloud telemetry (XDR) into a single incident timeline with attack-chain context to cut alert fatigue"
+        ],
+        "features": [
+          "Kernel/OS-level sensor capturing process creation, image/DLL loads, file and registry operations, and network connections (Windows minifilter + ETW, macOS…",
+          "Real-time YARA signature engine scanning files on disk and in memory, including packed/obfuscated payloads",
+          "Sigma-based behavioral detection engine with MITRE ATT&CK technique tagging and configurable rule packs",
+          "ML/anomaly detection models for fileless attacks, living-off-the-land binaries (LOLBins), and unusual process lineage"
+        ]
+      },
+      {
+        "value": "SIEM & Security Analytics",
+        "objectives": [
+          "Centralize ingestion, parsing, and normalization of high-volume security telemetry from heterogeneous sources into a unified schema (ECS/OCSF) for cross-source analytics",
+          "Deliver real-time threat detection via streaming correlation, Sigma/signature rules, and UEBA anomaly baselining to surface attacks with low mean-time-to-detect",
+          "Provide fast interactive investigation and threat hunting over petabyte-scale data with sub-second search, pivoting, and entity timelines",
+          "Reduce false positives and alert fatigue through enrichment, deduplication, risk scoring, ML-assisted noise reduction, and case grouping"
+        ],
+        "features": [
+          "Multi-source log/event collectors and agents (Windows/Linux/macOS, cloud audit, network flows, EDR) with lightweight endpoint shippers and FIM",
+          "Streaming ingestion pipeline with buffering/backpressure (message-bus-backed), parsing, and field normalization to a common schema (ECS/OCSF)",
+          "Real-time correlation and rule engine supporting Sigma rules, threshold/sequence/aggregation logic, and stateful event correlation windows",
+          "UEBA and ML-based anomaly detection that baselines user/host/entity behavior and flags deviations (impossible travel, rare process, beaconing)"
+        ]
+      },
+      {
+        "value": "SOAR & Security Automation",
+        "objectives": [
+          "Reduce mean time to detect (MTTD) and mean time to respond (MTTR) by automating triage, enrichment, containment, and remediation of security alerts end to end.",
+          "Provide a vendor-agnostic orchestration layer that connects siloed security and IT tools (SIEM, EDR, firewall, IAM, ticketing, threat intel) via APIs, webhooks, and pre-built connectors.",
+          "Enable analysts to build, version, and reuse incident-response playbooks through both no-code drag-and-drop and configuration-as-code (YAML) interfaces.",
+          "Centralize case and incident management with full audit trails so every automated and human action is recorded for compliance and post-incident review."
+        ],
+        "features": [
+          "Visual drag-and-drop playbook builder with branching conditional logic, loops, and parallel execution paths.",
+          "Configuration-as-code: YAML/JSON workflow definitions that stay bidirectionally in sync with the visual editor for Git-based version control and CI/CD.",
+          "Connector/integration marketplace with hundreds of pre-built app integrations and OpenAPI-spec auto-generation for any REST API.",
+          "Alert ingestion and normalization from SIEM, EDR, email, and webhooks, with deduplication and correlation into unified cases."
+        ]
+      },
+      {
+        "value": "Vulnerability Management",
+        "objectives": [
+          "Continuously discover and inventory all assets (hosts, containers, cloud workloads, web apps, OSS dependencies) and their software bill of materials (SBOM) to eliminate blind spots in the attack surface.",
+          "Detect known vulnerabilities (CVEs), misconfigurations, exposed secrets, and outdated components across infrastructure, code, and runtime environments via authenticated and unauthenticated scanning.",
+          "Prioritize findings using risk-based context (CVSS, EPSS exploit probability, CISA KEV active-exploitation, asset criticality, internet reachability) so teams fix what matters first rather than 'everything critical'.",
+          "Drive remediation to closure through ticketing integration, SLA tracking, ownership assignment, patch guidance, and verification rescans."
+        ],
+        "features": [
+          "Asset discovery and inventory with continuous network/cloud enumeration and CMDB-style tracking",
+          "Authenticated and unauthenticated vulnerability scanning across hosts, network devices, and web applications",
+          "Container, image, and Kubernetes scanning with base-image and layer-level CVE detection",
+          "Software Composition Analysis (SCA) and SBOM generation/ingestion (CycloneDX, SPDX) for OSS dependencies"
+        ]
+      }
+    ]
+  },
+  "Developer Tools": {
+    "name": "Tool Category",
+    "key": "category",
+    "values": [
+      "IDE / Code Editor",
+      "CI/CD & Build Automation",
+      "Version Control & Code Review",
+      "Package / Dependency Management"
+    ],
+    "detail": [
+      {
+        "value": "IDE / Code Editor",
+        "objectives": [
+          "Deliver a fast, responsive editing core that stays fluid (low input latency, high frame rates) even on multi-megabyte files and large monorepos via virtualized rendering, incremental tokenization, and rope/piece-table…",
+          "Provide deep language intelligence (completion, go-to-definition, find references, hover docs, diagnostics, refactoring) through LSP and incremental Tree-sitter parsing, decoupling editor UI from per-language analysis",
+          "Offer an extensible, sandboxed plugin ecosystem with a stable API and an isolated extension host so third parties can add languages, themes, debuggers, and tools without destabilizing the core",
+          "Integrate the full inner loop in one tool: Git source control, embedded terminal, build/run/task execution, and DAP-based debugging"
+        ],
+        "features": [
+          "Multi-tab/multi-pane code editor with syntax highlighting, code folding, minimap, multi-cursor and column selection, and bracket/indent guides",
+          "Tree-sitter-powered incremental parsing for syntax highlighting, structural selection, and code folding that survives invalid/partial edits",
+          "LSP client integration for autocompletion, signature help, hover, go-to-definition/references, rename/refactor, and inline diagnostics across many languages",
+          "Integrated debugger via the Debug Adapter Protocol (DAP) with breakpoints, watch expressions, call stack, and variable inspection"
+        ]
+      },
+      {
+        "value": "CI/CD & Build Automation",
+        "objectives": [
+          "Automate the full path from commit to production: trigger pipelines on source events (push, PR/MR, tag, schedule, manual) and orchestrate build, test, and deploy stages with explicit dependencies.",
+          "Provide fast, reproducible builds through caching, artifact management, containerized/isolated build environments, and incremental/parallel execution to minimize feedback latency.",
+          "Scale elastically with a distributed agent/runner model (self-hosted and ephemeral cloud runners) that schedules jobs to available capacity and supports matrix/fan-out execution.",
+          "Enforce quality and security gates in-pipeline: automated tests, code coverage thresholds, SAST/DAST/dependency scanning, and required approvals before promotion."
+        ],
+        "features": [
+          "Pipeline-as-code definitions in declarative YAML or a programmable DSL, validated and version-controlled alongside the repository.",
+          "Event-driven trigger engine reacting to webhooks (push, pull/merge request, tag, release), cron schedules, manual dispatch, and upstream-pipeline completion.",
+          "Distributed runner/agent fleet supporting self-hosted, autoscaling, and ephemeral cloud executors with Docker, Kubernetes, VM, and shell executor backends.",
+          "Job scheduler and queue that assigns work by labels/capabilities, concurrency limits, and least-loaded/priority routing."
+        ]
+      },
+      {
+        "value": "Version Control & Code Review",
+        "objectives": [
+          "Provide reliable, scalable Git hosting (repositories, branches, tags, refs, LFS) with fast clone/fetch/push performance even on large monorepos",
+          "Enable structured code review through pull/merge requests with inline line comments, suggestions, threaded discussions, and review approval states",
+          "Enforce code quality and governance via branch protection, required reviewers/approvals, status checks, CODEOWNERS, and merge gating",
+          "Render fast, accurate diffs (side-by-side and unified) with syntax highlighting, blame, and history navigation across revisions"
+        ],
+        "features": [
+          "Repository hosting with full Git protocol support (HTTPS/SSH), branches, tags, and Git LFS for large binaries",
+          "Pull/merge requests with side-by-side and unified diff views, syntax highlighting, and collapsible file trees",
+          "Inline line-level comments, threaded review conversations, and one-click 'suggested change' commits",
+          "Review approval workflow: Approve / Request Changes states, required reviewers, and dismissable stale reviews"
+        ]
+      },
+      {
+        "value": "Package / Dependency Management",
+        "objectives": [
+          "Provide deterministic, reproducible builds by resolving a dependency graph to exact versions and capturing them in a committed lockfile so every machine and CI run installs identical artifacts.",
+          "Implement a correct and fast dependency version solver (PubGrub / SAT / minimal-version-selection) that satisfies all transitive constraints and produces human-readable explanations when constraints conflict.",
+          "Minimize install time and disk usage through parallel network fetching, content-addressable global caches, hard-linking/deduplication, and incremental re-resolution.",
+          "Secure the software supply chain via integrity hashes, signature/provenance verification (Sigstore, SLSA), lockfile pinning, and known-vulnerability (CVE/advisory) scanning of dependencies."
+        ],
+        "features": [
+          "Manifest parsing and authoring for declarative dependency files (package.json, Cargo.toml, pyproject.toml, go.mod) with version range/semver constraint syntax.",
+          "Dependency graph resolver that computes a consistent version set across direct and transitive dependencies, with conflict detection and root-cause explanations.",
+          "Lockfile generation and verification recording exact resolved versions plus integrity hashes for reproducible installs.",
+          "Content-addressable global package cache with deduplication and hard-link/symlink-based project linking to cut disk usage and install time."
+        ]
+      }
+    ]
+  },
+  "IoT": {
+    "name": "Vertical",
+    "key": "vertical",
+    "values": [
+      "Industrial IoT (IIoT) / Manufacturing",
+      "Smart Home / Consumer",
+      "Smart Buildings & Energy Management",
+      "Connected Health & Wearables"
+    ],
+    "detail": [
+      {
+        "value": "Industrial IoT (IIoT) / Manufacturing",
+        "objectives": [
+          "Connect heterogeneous factory assets (PLCs, sensors, drives, legacy machines) into a unified data pipeline using standard industrial protocols (OPC UA, MQTT/Sparkplug B, Modbus, PROFINET, EtherNet/IP) without ripping…",
+          "Enable real-time monitoring and visibility of production lines, asset health, and OEE (Overall Equipment Effectiveness) across the plant floor and enterprise",
+          "Deliver predictive and condition-based maintenance to reduce unplanned downtime, using edge/cloud ML on vibration, thermal, current and time-series telemetry",
+          "Provide low-latency edge computing for protocol translation, local buffering (store-and-forward), and on-device inference in network-isolated or intermittently-connected OT environments"
+        ],
+        "features": [
+          "Multi-protocol device connectivity layer (OPC UA, MQTT/Sparkplug B, Modbus TCP/RTU, PROFINET, EtherNet/IP, BACnet) with protocol translation at the edge",
+          "Edge gateway runtime with store-and-forward buffering, local rules/flows (Node-RED), and containerized microservices (Docker/K3s) for offline-tolerant operation",
+          "Real-time time-series data ingestion and historian storage with downsampling, retention policies, and continuous aggregates",
+          "Operator HMI / SCADA-style dashboards with live tag updates, alarms, trends, and mimic/process diagrams following ISA-101 guidelines"
+        ]
+      },
+      {
+        "value": "Smart Home / Consumer",
+        "objectives": [
+          "Deliver seamless cross-ecosystem interoperability via Matter over Wi-Fi/Thread with commissioning into Apple Home, Google Home, Alexa, and SmartThings",
+          "Provide reliable real-time device control and state sync with sub-second latency across mobile, cloud, and devices",
+          "Prioritize local control and offline resilience so core automations keep working without cloud/internet",
+          "Enforce end-to-end security and privacy: encrypted transport, secure onboarding/attestation, least-privilege data handling"
+        ],
+        "features": [
+          "Guided device commissioning/onboarding via BLE + QR code/setup PIN with Matter pairing",
+          "Real-time device control dashboard (lights, locks, thermostats, plugs, cameras) with live state updates",
+          "Scenes and automation builder: time schedules, geofencing, sensor-triggered routines, and conditional rules",
+          "Voice assistant integration (Alexa, Google Assistant, Siri/HomeKit) and exposure as Matter endpoints"
+        ]
+      },
+      {
+        "value": "Smart Buildings & Energy Management",
+        "objectives": [
+          "Reduce building energy consumption and operating cost (typically 15-30%, up to 30-50% in inefficient buildings) by metering, monitoring, and optimizing HVAC, lighting, and plug loads in real time",
+          "Unify multi-vendor OT subsystems (HVAC, lighting, metering, access, fire) over standard protocols (BACnet, Modbus, KNX, M-Bus, OPC UA, MQTT) into a single normalized data model",
+          "Deliver real-time visibility through dashboards, digital twins, and alerts for facility managers, sustainability teams, and occupants",
+          "Enable predictive and automated control via rule engines and ML (load forecasting, anomaly detection, demand response, optimal start/stop, setpoint optimization)"
+        ],
+        "features": [
+          "Multi-protocol device ingestion/gateway: BACnet/IP & MS/TP, Modbus RTU/TCP, KNX, M-Bus, OPC UA, CoAP and MQTT normalization to a common point/asset model",
+          "Real-time submetering and energy dashboards with kWh/kW, cost, baseline, and peak-demand tracking down to circuit/zone level",
+          "Time-series telemetry pipeline with high-frequency ingestion, downsampling, retention policies, and historical trend analysis",
+          "Rule engine and automated control: schedules, optimal start/stop, demand-response load shedding, setpoint and lighting automation"
+        ]
+      },
+      {
+        "value": "Connected Health & Wearables",
+        "objectives": [
+          "Continuously and accurately capture physiological signals (heart rate, HRV, SpO2, ECG, skin temperature, sleep, activity/steps) from body-worn sensors with clinical-grade reliability",
+          "Achieve ultra-low-power operation and long battery life on constrained wearable hardware while sustaining always-on monitoring",
+          "Securely and reliably stream device data to companion apps and the cloud over BLE, Wi-Fi, and cellular (LTE-M/NB-IoT) with graceful offline buffering and sync",
+          "Normalize and exchange health data using interoperable standards (HL7 FHIR, Apple HealthKit, Android Health Connect) for EHR and clinical-dashboard integration"
+        ],
+        "features": [
+          "On-device sensor acquisition pipeline for PPG/ECG (e.g., MAX86150), IMU motion, and temperature with real-time DSP filtering",
+          "BLE GATT services using standard health profiles (Heart Rate, Battery, Health Thermometer) plus custom services for proprietary metrics",
+          "Edge AI inference on the wearable for arrhythmia/afib detection, fall detection, and sleep staging without cloud dependency",
+          "Over-the-air firmware update (DFU) with rollback and staged fleet rollouts"
+        ]
+      }
+    ]
+  }
+}

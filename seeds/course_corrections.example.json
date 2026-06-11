@@ -1,0 +1,54 @@
+{
+  "corrections": [
+    {
+      "name": "Neighborly",
+      "idea": "A community app where neighbors post local events.",
+      "industries": ["Social"],
+      "platforms": ["iOS", "Android", "Web"],
+      "objectives": ["Posting", "Following", "User notifications"],
+      "features": ["Event feed", "Direct messages", "Comments", "Search"],
+      "languages": ["Dart"],
+      "frameworks": ["Flutter"]
+    },
+    {
+      "name": "ClinicDesk",
+      "idea": "We need an internal tool for our dental clinic to manage appointments.",
+      "industries": ["Healthcare"],
+      "platforms": ["Web", "iOS"],
+      "objectives": ["Admin dashboard", "Scheduling", "Authentication"],
+      "features": ["Appointment calendar", "Patient records", "Reminders", "Role-based access"],
+      "languages": ["TypeScript"],
+      "frameworks": ["ASP.NET Core"]
+    },
+    {
+      "name": "TutorTrack",
+      "idea": "An app for my tutoring center to schedule sessions and track student progress.",
+      "industries": ["Education"],
+      "platforms": ["Web", "iOS", "Android"],
+      "objectives": ["Customer-facing UI", "Scheduling", "Reporting & analytics"],
+      "features": ["Session booking", "Progress tracking", "Notifications", "Reporting"],
+      "languages": ["Dart"],
+      "frameworks": ["Flutter"]
+    },
+    {
+      "name": "VowVendors",
+      "idea": "An event planning app for weddings with vendor coordination.",
+      "industries": ["Services"],
+      "platforms": ["iOS", "Android", "Web"],
+      "objectives": ["Scheduling", "Vendor coordination", "Budget tracking"],
+      "features": ["Vendor directory", "Shared timeline", "Guest list", "Reminders"],
+      "languages": ["Dart"],
+      "frameworks": ["Flutter"]
+    },
+    {
+      "name": "Stillness",
+      "idea": "A meditation app with guided sessions and streaks.",
+      "industries": ["Health & Fitness"],
+      "platforms": ["iOS", "Android"],
+      "objectives": ["Guided sessions", "Habit tracking", "User notifications"],
+      "features": ["Session library", "Streaks", "Reminders", "Progress stats"],
+      "languages": ["Dart"],
+      "frameworks": ["Flutter"]
+    }
+  ]
+}

@@ -14,7 +14,7 @@
             },
             "size": {
               "type": "string",
-              "description": "WxH \u2014 1024x1024 (default), 1024x1792, or 1792x1024."
+              "description": "WxH — 1024x1024 (default), 1024x1792, or 1792x1024."
             }
           },
           "required": [
@@ -81,7 +81,7 @@
       "type": "function",
       "function": {
         "name": "remove_tags",
-        "description": "Remove tag(s) from the project profile that the user has explicitly said are WRONG. ONLY call this when the user corrects or rejects a tag \u2014 e.g. \"this isn't a logistics app\", \"that's not ecommerce\", \"we're not B2B, take that off\". Never remove a tag the user hasn't disowned. Give each tag to drop as its category + exact value (the mirror of propose_tags). If the user named the correct value instead, propose_tags it after removing the wrong one.",
+        "description": "Remove tag(s) from the project profile that the user has explicitly said are WRONG. ONLY call this when the user corrects or rejects a tag — e.g. \"this isn't a logistics app\", \"that's not ecommerce\", \"we're not B2B, take that off\". Never remove a tag the user hasn't disowned. Give each tag to drop as its category + exact value (the mirror of propose_tags). If the user named the correct value instead, propose_tags it after removing the wrong one.",
         "parameters": {
           "type": "object",
           "properties": {
@@ -118,7 +118,7 @@
       "type": "function",
       "function": {
         "name": "draft_stories_from_text",
-        "description": "When the user says a big chunk describing several things at once, pass their RAW text here. A helper splits it and rephrases each part into a clean user story (title + As a\u2026 I want\u2026 so that\u2026) and adds them to the tree (optionally under parent_story_id).",
+        "description": "When the user says a big chunk describing several things at once, pass their RAW text here. A helper splits it and rephrases each part into a clean user story (title + As a… I want… so that…) and adds them to the tree (optionally under parent_story_id).",
         "parameters": {
           "type": "object",
           "properties": {
@@ -141,7 +141,7 @@
       "type": "function",
       "function": {
         "name": "add_user_story",
-        "description": "Add a user story to the project story tree during discovery. Make it a child of an epic/story via parent_story_id to build the tree (epics \u2192 stories \u2192 sub-stories).",
+        "description": "Add a user story to the project story tree during discovery. Make it a child of an epic/story via parent_story_id to build the tree (epics → stories → sub-stories).",
         "parameters": {
           "type": "object",
           "properties": {
@@ -308,6 +308,63 @@
           "required": [
             "task_id",
             "status"
+          ]
+        }
+      }
+    }
+  ],
+  "refine": [
+    {
+      "type": "function",
+      "function": {
+        "name": "list_plans",
+        "description": "List the generated plan files under /PLANS (path + name) so you can decide which one a piece of detail belongs in.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_plan",
+        "description": "Read the full Markdown of one plan file. ALWAYS read a plan before updating it so you preserve its existing content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Full workspace path, e.g. /PLANS/Client.md."
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_plan",
+        "description": "Overwrite a plan file with an expanded version that folds the user's description into the right section. Preserve the existing headings and checkbox skeleton — ADD detail, never delete what is there. The change is applied immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Full workspace path under /PLANS to overwrite."
+            },
+            "content": {
+              "type": "string",
+              "description": "The complete new Markdown for the file (existing content plus your additions)."
+            }
+          },
+          "required": [
+            "path",
+            "content"
           ]
         }
       }

@@ -5,8 +5,10 @@ Reads workspace/data/raw.jsonl (one JSON object per line, each
 `{"messages": [...]}` in OpenAI shape, tool_calls allowed). Validates, dedupes,
 optionally blends workspace/data/general.jsonl (general instruction/tool-use data
 to prevent forgetting), shuffles deterministically, and writes train.jsonl +
-valid.jsonl. mlx-lm applies the model's chat template AND completion-only loss
-masking for `messages` datasets, so train == serve format.
+valid.jsonl. mlx-lm applies the model's chat template; loss masking is NOT on by
+default — lora_config.yaml sets `mask_prompt: true` so loss lands only on the
+FINAL message of each example (which is why the generator emits one example per
+assistant generation point, shaped exactly like the serve request).
 """
 import json, hashlib, random, sys
 from pathlib import Path
@@ -106,6 +108,11 @@ def _iter_jsonl(path: Path):
             item = {"messages": _normalize_args(msgs)}
             if isinstance(obj.get("tools"), list) and obj["tools"]:
                 item["tools"] = obj["tools"]
+            # Group id (NOT written to train files): sibling examples split
+            # from one scripted conversation share long prefixes, so the
+            # train/valid split must keep the whole group on one side.
+            if isinstance(obj.get("conv"), str) and obj["conv"]:
+                item["conv"] = obj["conv"]
             yield item
 
 
@@ -132,13 +139,22 @@ def main():
     fvalid = open(DATA / "valid.jsonl", "w")
 
     def emit(item, force_train=False):
+        conv = item.pop("conv", None)   # grouping key only — never trained on
         h = hashlib.sha256(
             json.dumps(item, sort_keys=True).encode()).hexdigest()
         if h in seen:
             return False
         seen.add(h)
         line = json.dumps(item)
-        if not force_train and rng.random() < VAL_FRACTION:
+        # GROUP-AWARE split: examples from the same scripted conversation share
+        # long prefixes; hashing the group id puts the whole group on one side
+        # (per-row rng would leak train prefixes into valid → fake-low val loss).
+        if conv is not None:
+            to_val = (int(hashlib.sha256(conv.encode()).hexdigest(), 16)
+                      % 10000) < VAL_FRACTION * 10000
+        else:
+            to_val = rng.random() < VAL_FRACTION
+        if not force_train and to_val:
             fvalid.write(line + "\n"); n["val"] += 1
         else:
             ftrain.write(line + "\n"); n["train"] += 1

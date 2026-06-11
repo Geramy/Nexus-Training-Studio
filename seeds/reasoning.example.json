@@ -1,0 +1,250 @@
+{
+  "propose_tags": [
+    "Mapping what they told me to the right tags. Those topics are DONE now — I will not ask about them again.",
+    "Their message names the industry and platforms directly, so I can tag those without asking — then they're settled.",
+    "Saving these to the board. Once a topic has tags it's closed; the next question goes to something still open.",
+    "I can extract several tags straight from what they said. Recording them now so the board reflects it before I ask anything else.",
+    "These answers map cleanly onto categories — tagging them. Anything I tag here is off the question list for good.",
+    "Putting their choices on the board first. The board is the source of truth, so once these land I move to an open topic, not back."
+  ],
+  "remove_tags": [
+    "They said those are wrong — I'll remove exactly the tags they rejected, nothing else.",
+    "The user corrected me: that tag doesn't fit their project. Removing only what they rejected and keeping the rest intact.",
+    "Wrong guess on my part. I'll pull the rejected tags off the board, then replace them with what they actually meant."
+  ],
+  "ask_question": [
+    "That topic is still OPEN (nothing tagged for it yet), so I'll ask it exactly ONCE.",
+    "Checking the board: this category has no tags, so it's the next thing to ask about — one question, with concrete options.",
+    "Nothing on the board for this topic yet. Asking it now; once they answer and I tag it, it's done.",
+    "The board shows this is still unanswered. One focused question with options beats an open-ended prompt.",
+    "Next open topic per the board. I only ever ask each topic once, so I'll make the options count.",
+    "This category is empty while the earlier ones are filled — so this is the question to ask, and only this."
+  ],
+  "finalize_setup": [
+    "Every required topic now has at least one tag — re-asking anything would just loop, so I'm finalizing.",
+    "Board check: industries, platforms, objectives, features, languages, frameworks all have tags. Nothing left to ask — finalizing.",
+    "All required categories are covered on the board. The right move now is finalize_setup, not another question.",
+    "Nothing required is still open. Time to finalize and generate the plans.",
+    "The board is complete for every required topic, so another question would add nothing — calling finalize_setup."
+  ],
+  "scope_options": [
+    "Before finalizing I should scope the libraries and verify them.",
+    "The stack is set, so now I can scope library options that actually fit it."
+  ],
+  "lookup_package": [
+    "Let me check each package is still maintained before adding it.",
+    "Verifying this package is alive and current before it goes on the board.",
+    "I shouldn't recommend a library without checking its freshness first."
+  ],
+  "dismiss_item": [
+    "These came back stale, so I'll drop them.",
+    "The lookup says this one is unmaintained — dismissing it rather than tagging it."
+  ],
+  "consider_items": [
+    "Worth weighing these options before I decide.",
+    "Putting these candidates under consideration so the comparison is explicit."
+  ],
+  "generate_image": [
+    "They want to see it, so I'll generate a mockup.",
+    "A visual will answer this faster than a description — generating a mockup."
+  ],
+  "edit_image": [
+    "Applying the change they asked for to the latest image.",
+    "Adjusting the existing mockup rather than starting over."
+  ],
+  "create_task": [
+    "Turning this into a concrete, stack-specific task.",
+    "Writing this up as an actionable task tied to the chosen stack.",
+    "This piece of work stands alone — creating a task for it with clear acceptance criteria."
+  ],
+  "assign_agent_to_task": [
+    "Assigning it to the agent that fits.",
+    "Matching the task to the agent whose role covers this work."
+  ],
+  "update_task": [
+    "Updating the task with their change.",
+    "Folding their correction into the existing task instead of making a new one."
+  ],
+  "update_task_status": [
+    "Moving the task to its new status.",
+    "Status change only — the task itself stays as written."
+  ],
+  "add_user_story": [
+    "Capturing this as a user story in the tree.",
+    "That's a distinct piece of user-facing behaviour — adding it as a story.",
+    "Recording this in their own words as a story before we move on."
+  ],
+  "update_user_story": [
+    "Refining that story with the new detail.",
+    "They added detail to an existing story — updating it rather than duplicating."
+  ],
+  "draft_stories_from_text": [
+    "Big chunk — I'll split it into clean stories.",
+    "They gave me a lot at once; the splitter will break it into proper stories faster than hand-writing each."
+  ],
+  "default": [
+    "I'll call the tool to act on what they said.",
+    "This needs a tool call, not prose — acting on it now.",
+    "The next step is concrete, so I'll do it rather than describe it."
+  ],
+  "wrapup": [
+    "Wrapping up in one short sentence.",
+    "Done — confirming briefly and handing back to them.",
+    "Everything is recorded; a one-line close is all that's needed."
+  ],
+  "stall": "Hmm.",
+  "nudge_record_recover": [
+    "I acknowledged their picks but never saved them — recording the {category} on the board NOW, plus the stack, before anything else.",
+    "Their last answer ({category}) never made it onto the board. Fixing that first with propose_tags, then continuing.",
+    "I moved on without saving their {category} selections — that breaks the board as source of truth. Recording them immediately."
+  ],
+  "nudge_continue_recover": [
+    "I stalled. {topic} is the next OPEN topic (the board already covers the rest) — asking it now, exactly once.",
+    "Picking the thread back up: the board shows {topic} still open, so that's my next single question.",
+    "No more hesitating — {topic} has no tags yet, everything else does. Asking it once."
+  ],
+  "skip_no_reask": [
+    "They skipped the {topic} question — I will NOT re-ask it. I'll propose minimal sensible defaults myself and keep moving.",
+    "Skipping {topic} is an answer too. Rather than push, I'll tag sensible defaults and continue.",
+    "They declined to answer {topic}, so re-asking would be annoying — defaults go on the board and we move on."
+  ],
+  "finalize_rejected_ask": [
+    "The gate rejected finalize: {missing} still has no tags. Re-calling finalize would fail the exact same way — asking about {topic} instead.",
+    "finalize_setup came back not-ready and named {missing}. The fix is never to retry the call — it's to fill the gap, so I'm asking the {topic} question now.",
+    "Finalize is gated until {missing} has at least one tag. Repeating finalize changes nothing; one question on {topic} closes the gap.",
+    "I jumped to finalize too early — the result says {missing} is still open. Asking {topic} once, tagging the answer, then finalizing."
+  ],
+  "finalize_rejected_derive": [
+    "The gate says {missing} are still empty. Those follow directly from the platforms already on the board — tagging the stack myself, no question needed.",
+    "finalize_setup was rejected over {missing}. The user shouldn't be asked about stack internals; I derive them from the chosen platforms and tag them now.",
+    "Not ready: {missing} have no tags. The platform choice pins these down, so I propose them directly and then finalize for real."
+  ],
+  "loop_guard_recover": [
+    "The loop guard stopped me — repeating finalize cannot change the gate. The rejection listed {missing}; fixing that first is the only way forward.",
+    "I repeated the same finalize call and got blocked. The earlier result already told me what's missing ({missing}) — acting on THAT now instead of retrying.",
+    "Blocked for looping. The gate's list is the instruction: {missing} needs tags before finalize can ever succeed, so I'm filling it now."
+  ],
+  "finalize_rejected_compound": [
+    "The gate listed {missing} — several sections at once. That doesn't change the method: one question per open topic, then derive the stack myself. Retrying finalize fixes nothing.",
+    "finalize_setup rejected: {missing} are all still open. I work the list in order — ask about the first open topic now, tag the answer, and only finalize once each named section has a tag.",
+    "Not ready — the rejection names {missing}. Libraries being tagged doesn't cover those. One question for the next open section; the stack I can derive without asking.",
+    "{missing} have no tags yet, so the gate is right to block. I take them one at a time — a single question now, then the rest, then finalize."
+  ],
+  "compound_save_features": [
+    "Features land on the board now. Languages and frameworks are still open, but those follow from the platforms — I derive them next instead of asking.",
+    "Tagging their feature picks under features — that closes it. The remaining gaps from the rejection are stack sections I can fill myself.",
+    "Their answer goes on the board as features, not anywhere else. With features done, only languages and frameworks remain from the gate's list."
+  ],
+  "compound_derive_stack": [
+    "Only the stack sections remain from the rejection list. They follow from the platforms already on the board — tagging languages and frameworks directly, then finalize.",
+    "Features are done, so languages and frameworks are the last gate items. Stack internals aren't a user question — I propose them from the platform choice and finalize for real.",
+    "The board now covers everything except the stack. Deriving languages/frameworks from the platforms and tagging them; the next finalize will pass."
+  ],
+  "libraries_early_ask": [
+    "Libraries are tagged, but the board still shows {missing} with nothing in them. Finalizing now would just bounce off the gate — asking the next open topic instead.",
+    "Library verification is done, yet {missing} are still empty on the board. Required sections come before finalize, so one focused question now.",
+    "The board says {missing} have no tags. Having libraries doesn't make the profile complete — I ask about the first open section before any finalize attempt.",
+    "Libraries on the board don't satisfy the required sections: {missing} are open. The next move is a question, not finalize_setup."
+  ],
+  "second_batch_tags": [
+    "Basics are saved and that call is closed. The rest of what they told me goes on the board in its own batch — small, complete calls beat one giant list.",
+    "Industry and platforms are settled, so this batch covers the remaining things they actually said. Tag it, close the array, move on.",
+    "Adding the next batch now that the first one landed. I tag in short, finished calls — each list ends, then the board tells me what is still open.",
+    "Second batch: the rest of what their message states outright. Once this call returns, anything still untagged needs a question, not more guessing."
+  ],
+  "features_present_derive": [
+    "Features went on the board earlier this turn — the propose_tags result confirmed them, so the snapshot just predates that. The only truly open sections are languages and frameworks, and those I derive from the platforms rather than ask.",
+    "I already tagged features; asking about them again would repeat a settled topic. What is genuinely missing is the stack — languages and frameworks follow from the platform choice, so I propose them directly.",
+    "The board summary is from the start of the turn; features were tagged after it. Re-asking a closed topic is the one thing I must not do — deriving languages and frameworks now instead.",
+    "Features: already proposed and accepted this turn, whatever the stale summary says. Stack sections are never user questions — tagging languages and frameworks from the platforms and moving to finalize."
+  ],
+  "correction_seed": [
+    "Mapping the industry and platforms they implied — those topics are DONE; I won't ask about them again.",
+    "Their opener already pins down industry and platforms, so I tag those directly and save my questions for what's missing."
+  ],
+  "correction_ask_objectives": [
+    "Objectives is the next OPEN topic, so I ask it ONCE.",
+    "The board has nothing under objectives yet — one question with options covers it."
+  ],
+  "correction_save_objectives": [
+    "Saving objectives. Objectives now has tags — I will NOT re-ask it. Features is the only product topic still open.",
+    "Objectives recorded on the board, which closes that topic. Features is the last product gap."
+  ],
+  "correction_ask_features": [
+    "Features is the last open topic — I ask it ONCE, then move on.",
+    "Only features remains untagged; a single options question settles it."
+  ],
+  "correction_save_features": [
+    "Saving features and deriving the language/framework stack myself. Every required topic now has a tag — there is nothing left to ask.",
+    "Features go on the board, and the stack follows from the platforms — I tag it rather than ask. That completes every required topic."
+  ],
+  "correction_finalize": [
+    "Industries, platforms, objectives, features, languages and frameworks are all tagged. Re-asking anything would just loop — finalizing.",
+    "Final board check passes: every required category has tags. Finalizing setup."
+  ],
+  "story_root": [
+    "The overall product is the root epic — everything else hangs under it.",
+    "Starting the tree with the product itself as the root; every flow nests beneath it."
+  ],
+  "story_chain": [
+    "These are sequential steps of one flow, so each story is the CHILD of the step before it — a parent→child chain, not a flat list.",
+    "This is one flow told in order — each step becomes the child of the previous one so the chain reads like the user's path."
+  ],
+  "story_group": [
+    "This is a distinct feature area — a parent story under the epic, with its details nested beneath it.",
+    "New feature area: it gets its own parent story under the epic, and the specifics nest under that."
+  ],
+  "story_expand": [
+    "They named that feature only in passing — capturing a story for it now, then I'll ask them to walk me through it.",
+    "That was a passing mention, but it's real scope — adding a story and following up so it doesn't get lost."
+  ],
+  "story_reparent": [
+    "That story sits at the wrong spot in the tree — moving it under its real parent so the flow stays grouped.",
+    "This belongs under a different parent — re-homing it so the tree mirrors the actual flow."
+  ],
+  "story_draft": [
+    "That's a big chunk covering several things — passing their raw words to the splitter instead of hand-writing each story.",
+    "Too much in one breath to hand-write — sending their exact words to draft_stories_from_text."
+  ],
+  "story_note": [
+    "That detail belongs on the story as a note, not a new story.",
+    "Small detail, existing story — attaching it as a note rather than cluttering the tree."
+  ],
+  "story_confirm": [
+    "The tree covers every area they named — paraphrasing the whole flow back so they can confirm nothing is missing.",
+    "Every flow they described is in the tree now; reading it back in their terms to confirm before closing."
+  ],
+  "subaxis_follow": [
+    "The result says NEXT: this industry introduces a {axis} sub-question — asking it now, before any other topic.",
+    "The industry tag came back with a NEXT hint: {axis} narrows the vocabulary, so that question jumps the queue.",
+    "Tagging this industry opened a {axis} follow-up — the catalog says answer it before generic topics, so I will."
+  ],
+  "scope_compress": [
+    "The scoped vocabulary is long-form — I'll offer short labels and tag ≤5-word values, one idea per tag.",
+    "These catalog entries are wordy; I'll compress to short labels — one idea per tag, five words max."
+  ],
+  "refine_read": [
+    "I always read the plan first so the update preserves its headings and checkbox skeleton.",
+    "Before touching the plan I read it — the update has to keep its structure intact."
+  ],
+  "refine_merge": [
+    "Folding their description into the right section — ADDING detail and checklist items, never deleting what's there.",
+    "Merging their request into the matching section: add detail and checkboxes, remove nothing."
+  ],
+  "list_agents": [
+    "Every task must be assigned, so I list the agents FIRST and reuse their real ids.",
+    "Before creating tasks I need the real agent ids — listing agents first."
+  ],
+  "list_tasks": [
+    "Reading the current tasks before changing anything.",
+    "Checking what tasks already exist so I don't duplicate or clobber."
+  ],
+  "list_user_stories": [
+    "Checking the current shape of the tree before I continue.",
+    "A quick read of the story tree so my next edit lands in the right place."
+  ],
+  "move_user_story": [
+    "Re-parenting so the flow stays a proper chain, not a flat list.",
+    "Moving this story under its true parent — the tree should read as the user's path, not a pile."
+  ]
+}
